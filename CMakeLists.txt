@@ -9,7 +9,9 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Quick)
 qt_standard_project_setup()
 
 include_directories(src/
-                    qml/)
+                    qml/
+                    third-party/tensorflow
+                    third-party/flatbuffers/include)
 
 qt_add_executable(appCarPrice
     src/main.cpp
@@ -32,8 +34,15 @@ set_target_properties(appCarPrice PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+# Import tensorflow-lite library for it need set property(where located library),
+# add and link it using `tensorflowlite` name.
+add_library(tensorflowlite SHARED IMPORTED)
+set_property(TARGET tensorflowlite PROPERTY
+             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libtensorflowlite.so)
+
 target_link_libraries(appCarPrice
     PRIVATE Qt6::Quick
+    tensorflowlite
 )
 
 include(GNUInstallDirs)

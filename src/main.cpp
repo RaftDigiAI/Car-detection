@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <tensorflow/lite/interpreter.h>
 
 int main(int argc, char *argv[]) {
   QGuiApplication app(argc, argv);

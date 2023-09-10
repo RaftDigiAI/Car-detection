@@ -1,0 +1,8 @@
+[submodule "third-party/tensorflow"]
+	path = third-party/tensorflow
+	url = https://github.com/tensorflow/tensorflow.git
+        branch = v2.13.0
+[submodule "third-party/flatbuffers"]
+	path = third-party/flatbuffers
+	url = https://github.com/google/flatbuffers.git
+        branch = v23.5.26
