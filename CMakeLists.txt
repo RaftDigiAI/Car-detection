@@ -4,12 +4,13 @@ project(CarPrice VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Quick)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Multimedia)
 
 qt_standard_project_setup()
 
 include_directories(src/
                     qml/
+                    headers/
                     third-party/tensorflow
                     third-party/flatbuffers/include)
 
@@ -21,6 +22,7 @@ qt_add_qml_module(appCarPrice
     URI CarPrice
     VERSION 1.0
     QML_FILES qml/Main.qml
+    SOURCES headers/tensorflowvideosink.h src/tensorflowvideosink.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -49,6 +51,7 @@ endif()
 
 target_link_libraries(appCarPrice
     PRIVATE Qt6::Quick
+    Qt6::Multimedia
     tensorflowlite
 )
 
