@@ -37,8 +37,15 @@ set_target_properties(appCarPrice PROPERTIES
 # Import tensorflow-lite library for it need set property(where located library),
 # add and link it using `tensorflowlite` name.
 add_library(tensorflowlite SHARED IMPORTED)
-set_property(TARGET tensorflowlite PROPERTY
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libtensorflowlite.so)
+
+if (ANDROID)
+    set_property(TARGET tensorflowlite PROPERTY
+                IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/arm64/libtensorflowlite.so)
+elseif (UNIX)
+    set_property(TARGET tensorflowlite PROPERTY
+                IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/linux/libtensorflowlite.so)
+endif()
+
 
 target_link_libraries(appCarPrice
     PRIVATE Qt6::Quick
