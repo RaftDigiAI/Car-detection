@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/res">
+        <file alias="model">resource/yolo5-lite.tflite</file>
+    </qresource>
+</RCC>

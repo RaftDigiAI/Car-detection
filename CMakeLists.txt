@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(CarPrice VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Multimedia)
 
@@ -16,13 +17,17 @@ include_directories(src/
 
 qt_add_executable(appCarPrice
     src/main.cpp
+    resource.qrc
 )
 
 qt_add_qml_module(appCarPrice
     URI CarPrice
     VERSION 1.0
     QML_FILES qml/Main.qml
-    SOURCES headers/tensorflowvideosink.h src/tensorflowvideosink.cpp
+    SOURCES headers/videohandler.h src/videohandler.cpp
+    RESOURCES resource.qrc
+    SOURCES headers/tensorflowmodel.h src/tensorflowmodel.cpp
+
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -41,11 +46,21 @@ set_target_properties(appCarPrice PROPERTIES
 add_library(tensorflowlite SHARED IMPORTED)
 
 if (ANDROID)
-    set_property(TARGET tensorflowlite PROPERTY
-                IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/arm64/libtensorflowlite.so)
-elseif (UNIX)
+    if (${ANDROID_ABI} STREQUAL "x86_64")
+        message("Will be build android x86_64")
+        set_property(TARGET tensorflowlite PROPERTY
+                    IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/x86_64/libtensorflowlite.so)
+    elseif (${ANDROID_ABI} STREQUAL "arm64-v8a")
+        message("Will be build android arm64-v8a")
+        set_property(TARGET tensorflowlite PROPERTY
+                    IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/arm64/libtensorflowlite.so)
+    else ()
+        message(WARNING "Not impleted yet.")
+    endif()
+else ()
     set_property(TARGET tensorflowlite PROPERTY
                 IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/linux/libtensorflowlite.so)
+        message(DEBUG "Will be build desktop")
 endif()
 
 

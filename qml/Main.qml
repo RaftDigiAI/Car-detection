@@ -1,6 +1,8 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Window
 import QtMultimedia
+import CarPrice
 
 Window {
     id: root
@@ -9,6 +11,10 @@ Window {
     height: 480
     visible: true
 
+    MediaDevices {
+        id: mediaDevices
+    }
+
     CaptureSession {
         imageCapture: ImageCapture {
             id: imageCapture
@@ -16,17 +22,20 @@ Window {
 
         camera: Camera {
             id: camera
+            cameraDevice: mediaDevices.defaultVideoInput
             active: true
         }
 
         videoOutput: preview
     }
 
+    VideoHandler {
+        id: handler
+        videoSink: preview.videoSink
+    }
+
     VideoOutput {
         id: preview
         anchors.fill: parent
-        videoSink.call: {
-            preview.frameUpdated()
-        }
     }
 }
