@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/res">
         <file alias="model">resource/yolo5-lite.tflite</file>
+        <file alias="model2">../../../../Загрузки/lite-model_efficientdet_lite0_detection_default_1 (1).tflite</file>
     </qresource>
 </RCC>

@@ -23,7 +23,6 @@ Window {
         camera: Camera {
             id: camera
             cameraDevice: mediaDevices.defaultVideoInput
-            active: true
         }
 
         videoOutput: preview
@@ -38,4 +37,6 @@ Window {
         id: preview
         anchors.fill: parent
     }
+
+    Component.onCompleted: camera.start()
 }

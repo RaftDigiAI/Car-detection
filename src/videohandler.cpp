@@ -21,10 +21,12 @@ void VideoHandler::proccesFrame() {
   frame.map(QVideoFrame::ReadOnly);
   // Section for working with image.
   QImage image{frame.toImage()};
+  image = image.scaled({320, 320});
   mItWork = image.isNull() ? false : true;
+  qDebug() << image.size();
   emit itWorkChanged();
   //
-  frame.unmap();
+  //  frame.unmap();
   mVideoSink->setVideoFrame(frame);
 }
 
