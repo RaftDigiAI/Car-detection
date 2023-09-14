@@ -1,5 +1,4 @@
-#ifndef TESTVIDEOSINK_H
-#define TESTVIDEOSINK_H
+#pragma once
 
 #include <QObject>
 #include <QPainter>
@@ -13,43 +12,56 @@
 class VideoHandler : public QObject {
   Q_OBJECT
   QML_ELEMENT
+
   Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY
                  videoSinkChanged FINAL)
-  Q_PROPERTY(bool itWork READ itWork WRITE setItWork NOTIFY itWorkChanged FINAL)
+
+  Q_PROPERTY(
+            bool isValid READ isValid WRITE setIsValid NOTIFY isValidChanged FINAL)
+
+  Q_PROPERTY(bool objectOnFrame READ objectOnFrame WRITE setObjectOnFrame NOTIFY
+                 objectOnFrameChanged FINAL)
+
+  Q_PROPERTY(bool inferenceCorrect READ inferenceCorrect WRITE
+                 setInferenceCorrect NOTIFY inferenceCorrectChanged FINAL)
 public:
   VideoHandler(QObject *parent = nullptr);
 
-  /**
-   * @brief videoSink
-   * @return pointer on current video sink.
-   */
-  QVideoSink *videoSink() const;
+  QVideoSink *videoSink() const noexcept;
+  void setVideoSink(QVideoSink *newVideoSink) noexcept;
 
-  /**
-   * @brief setVideoSink
-   * @param newVideoSink
-   */
-  void setVideoSink(QVideoSink *newVideoSink);
+  bool isValid() const noexcept;
+  void setIsValid(bool newIsValid) noexcept;
 
-  bool itWork() const;
-  void setItWork(bool newItWork);
+  bool objectOnFrame() const;
+  void setObjectOnFrame(bool newObjectOnFrame);
+
+  bool inferenceCorrect() const;
+  void setInferenceCorrect(bool newInferenceCorrect);
 
 signals:
   void videoSinkChanged();
-  void itWorkChanged();
+  void isValidChanged();
+
+  void objectOnFrameChanged();
+
+  void inferenceCorrectChanged();
 
 private slots:
   /**
    * @brief proccesFrame
    * @param frame
    */
-  void proccesFrame();
+  void processFrame();
+
+private:
+  void processImage(const QImage &image) noexcept;
 
 private:
   TensorflowModel mModel;
+  bool mObjectOnFrame;
+  bool mInferenceCorrect;
 
   QPointer<QVideoSink> mVideoSink;
-  bool mItWork;
+  bool mIsValid;
 };
-
-#endif // TESTVIDEOSINK_H

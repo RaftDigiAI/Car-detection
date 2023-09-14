@@ -4,12 +4,14 @@ import QtQuick.Window
 import QtMultimedia
 import CarPrice
 
-Window {
+ApplicationWindow {
     id: root
 
     width: 640
     height: 480
     visible: true
+
+    onClosing: camera.stop()
 
     MediaDevices {
         id: mediaDevices
@@ -23,6 +25,7 @@ Window {
         camera: Camera {
             id: camera
             cameraDevice: mediaDevices.defaultVideoInput
+            active: true
         }
 
         videoOutput: preview
@@ -38,5 +41,29 @@ Window {
         anchors.fill: parent
     }
 
-    Component.onCompleted: camera.start()
+    footer: Item {
+        height: 0.05 * parent.height
+        Text {
+            id: detectionStatus
+            anchors.left: parent
+            anchors.top: parent
+            anchors.bottom: parent
+            text: handler.objectOnFrame ? qsTr("Car on frame") : qsTr("Car not found")
+        }
+
+        Text {
+            id:inferenseStatus;
+
+            anchors.top: parent
+            anchors.bottom: parent
+            anchors.left: detectionStatus.right
+            anchors.margins: {
+                left: 10
+            }
+
+            text: handler.inferenceCorrect ? qsTr("Inference fine") : qsTr("Problem with model")
+        }
+    }
+
+
 }

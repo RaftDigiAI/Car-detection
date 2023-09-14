@@ -45,9 +45,10 @@ set_target_properties(appCarPrice PROPERTIES
 # add and link it using `tensorflowlite` name.
 #add_library(tensorflowlite SHARED IMPORTED)
 
-qt_add_library(tensorflowlite SHARED IMPORTED)
+add_library(tensorflowlite SHARED IMPORTED)
 
 if (ANDROID)
+
     if (${ANDROID_ABI} STREQUAL "x86_64")
         message("Will be build android x86_64")
         set_property(TARGET tensorflowlite PROPERTY
@@ -62,13 +63,15 @@ if (ANDROID)
         message(WARNING "Not impleted yet.")
     endif()
 else ()
+    set_property(TARGET tensorflowlite PROPERTY
+                IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/linux/libtensorflowlite.so)
     message(DEBUG "Will be build desktop")
 endif()
 
 target_link_libraries(appCarPrice
     PRIVATE Qt6::Quick
     Qt6::Multimedia
-#    tensorflowlite
+    tensorflowlite
 )
 
 include(GNUInstallDirs)
