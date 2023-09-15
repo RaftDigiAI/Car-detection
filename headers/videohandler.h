@@ -1,13 +1,13 @@
 #pragma once
 
+#include "tensorflowmodel.h"
 #include <QObject>
 #include <QPainter>
 #include <QQmlEngine>
 #include <QString>
+#include <QTimer>
 #include <QVideoFrame>
 #include <QVideoSink>
-
-#include "tensorflowmodel.h"
 
 class VideoHandler : public QObject {
   Q_OBJECT
@@ -17,13 +17,15 @@ class VideoHandler : public QObject {
                  videoSinkChanged FINAL)
 
   Q_PROPERTY(
-            bool isValid READ isValid WRITE setIsValid NOTIFY isValidChanged FINAL)
-
-  Q_PROPERTY(bool objectOnFrame READ objectOnFrame WRITE setObjectOnFrame NOTIFY
-                 objectOnFrameChanged FINAL)
+      bool isValid READ isValid WRITE setIsValid NOTIFY isValidChanged FINAL)
 
   Q_PROPERTY(bool inferenceCorrect READ inferenceCorrect WRITE
                  setInferenceCorrect NOTIFY inferenceCorrectChanged FINAL)
+
+  Q_PROPERTY(
+      int classId READ classId WRITE setClassId NOTIFY classIdChanged FINAL)
+  Q_PROPERTY(float score READ score WRITE setScore NOTIFY scoreChanged FINAL)
+
 public:
   VideoHandler(QObject *parent = nullptr);
 
@@ -33,19 +35,27 @@ public:
   bool isValid() const noexcept;
   void setIsValid(bool newIsValid) noexcept;
 
-  bool objectOnFrame() const;
-  void setObjectOnFrame(bool newObjectOnFrame);
-
   bool inferenceCorrect() const;
   void setInferenceCorrect(bool newInferenceCorrect);
 
+  int classId() const;
+  void setClassId(int newClassId);
+
+  float score() const;
+  void setScore(float newScore);
+
 signals:
   void videoSinkChanged();
+
   void isValidChanged();
 
   void objectOnFrameChanged();
 
   void inferenceCorrectChanged();
+
+  void classIdChanged();
+
+  void scoreChanged();
 
 private slots:
   /**
@@ -58,9 +68,13 @@ private:
   void processImage(const QImage &image) noexcept;
 
 private:
+  QTimer mTimer;
+
   TensorflowModel mModel;
-  bool mObjectOnFrame;
   bool mInferenceCorrect;
+
+  int mClassId;
+  float mScore;
 
   QPointer<QVideoSink> mVideoSink;
   bool mIsValid;

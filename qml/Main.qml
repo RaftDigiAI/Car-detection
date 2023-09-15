@@ -48,11 +48,11 @@ ApplicationWindow {
             anchors.left: parent
             anchors.top: parent
             anchors.bottom: parent
-            text: handler.objectOnFrame ? qsTr("Car on frame") : qsTr("Car not found")
+            text: "Finded object:" + handler.classId + ", score" + handler.score
         }
 
         Text {
-            id:inferenseStatus;
+            id: inferenseStatus
 
             anchors.top: parent
             anchors.bottom: parent
@@ -61,9 +61,8 @@ ApplicationWindow {
                 left: 10
             }
 
-            text: handler.inferenceCorrect ? qsTr("Inference fine") : qsTr("Problem with model")
+            text: handler.inferenceCorrect ? qsTr("Inference fine") : qsTr(
+                                                 "Problem with model")
         }
     }
-
-
 }

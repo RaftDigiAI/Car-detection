@@ -1,8 +1,13 @@
 #include "videohandler.h"
 
 VideoHandler::VideoHandler(QObject *parent)
-    : QObject{parent}, mIsValid{false}, mVideoSink{nullptr},
-      mObjectOnFrame{false} {}
+    : QObject{parent}, mIsValid{false}, mVideoSink{nullptr}, mClassId{-1},
+      mScore{0}, mInferenceCorrect{false} {
+  mTimer.setInterval(Constants::General::inferenceDelayMs);
+  connect(&mTimer, &QTimer::timeout, this, &VideoHandler::processFrame);
+}
+
+///////////////////////QML CONNECTIONS/////////////////////////////////////////
 
 QVideoSink *VideoHandler::videoSink() const noexcept {
   return mVideoSink.get();
@@ -13,52 +18,9 @@ void VideoHandler::setVideoSink(QVideoSink *newVideoSink) noexcept {
     return;
 
   mVideoSink = newVideoSink;
-  // Need disconnect?
-  connect(this->mVideoSink, &QVideoSink::videoFrameChanged, this,
-          &VideoHandler::processFrame);
-
   emit videoSinkChanged();
-}
 
-void VideoHandler::processFrame() {
-  QVideoFrame frame = mVideoSink->videoFrame();
-  //  mIsValid = frame.isValid() ? true : false;
-
-  //  if (!mIsValid) {
-  //    qWarning() << "Class: VideoHandler, func: processFrame. Not valid
-  //    frame."; return;
-  //  }
-
-  // auto mapStatus = frame.map(QVideoFrame::ReadOnly);
-  //  if (!mapStatus) {
-  //    qWarning() << "Class: VideoHandler, func: processFrame. Cannot map
-  //    frame."; return;
-  //  }
-
-  processImage(frame.toImage());
-  //  frame.unmap();
-
-  mVideoSink->setVideoFrame(frame);
-}
-
-void VideoHandler::processImage(const QImage &image) noexcept {
-  if (image.isNull()) {
-    qDebug() << "Image not valid";
-    return;
-  }
-
-  // Some transform.
-  qDebug() << "start scale";
-  QImage inputImage{image.scaled(Constants::Model::input_width,
-                                 Constants::Model::input_height)};
-  // Pass image to model.
-
-  qDebug() << "end scale";
-  auto [forwardPass, objectOnFrame] = mModel.forward(inputImage);
-  mInferenceCorrect = forwardPass;
-  mObjectOnFrame = objectOnFrame;
-  emit inferenceCorrectChanged();
-  emit objectOnFrameChanged();
+  mTimer.start();
 }
 
 bool VideoHandler::inferenceCorrect() const { return mInferenceCorrect; }
@@ -70,15 +32,6 @@ void VideoHandler::setInferenceCorrect(bool newInferenceCorrect) {
   emit inferenceCorrectChanged();
 }
 
-bool VideoHandler::objectOnFrame() const { return mObjectOnFrame; }
-
-void VideoHandler::setObjectOnFrame(bool newObjectOnFrame) {
-  if (mObjectOnFrame == newObjectOnFrame)
-    return;
-  mObjectOnFrame = newObjectOnFrame;
-  emit objectOnFrameChanged();
-}
-
 bool VideoHandler::isValid() const noexcept { return mIsValid; }
 
 void VideoHandler::setIsValid(bool newIsValid) noexcept {
@@ -86,4 +39,56 @@ void VideoHandler::setIsValid(bool newIsValid) noexcept {
     return;
   mIsValid = newIsValid;
   emit isValidChanged();
+}
+
+float VideoHandler::score() const { return mScore; }
+
+void VideoHandler::setScore(float newScore) {
+  if (qFuzzyCompare(mScore, newScore))
+    return;
+  mScore = newScore;
+  emit scoreChanged();
+}
+
+int VideoHandler::classId() const { return mClassId; }
+
+void VideoHandler::setClassId(int newClassId) {
+  if (mClassId == newClassId)
+    return;
+  mClassId = newClassId;
+  emit classIdChanged();
+}
+
+///////////////////////////END QML CONNECTIONS//////////////////////////////////
+
+void VideoHandler::processFrame() {
+  QVideoFrame frame = mVideoSink->videoFrame();
+
+  QElapsedTimer timer;
+  timer.start();
+  processImage(frame.toImage());
+  qDebug() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
+           << "ms.";
+
+  mVideoSink->setVideoFrame(frame);
+}
+
+void VideoHandler::processImage(const QImage &image) noexcept {
+  if (image.isNull()) {
+    qDebug() << "VideoHandler::processImage. Image not valid.";
+    return;
+  }
+  QElapsedTimer timer;
+  timer.start();
+  // Transformation section.
+  QImage inputImage{image.scaled(Constants::Model::inputWidth,
+                                 Constants::Model::inputHeight)};
+  inputImage.convertTo(QImage::Format_RGB888);
+  // Pass image to model.
+  qDebug() << "VideoHandler::processImage. Resize time:" << timer.elapsed();
+  // Process results.
+  const auto [status, classId, score] = mModel.forward(inputImage);
+  setClassId(classId);
+  setScore(score);
+  setInferenceCorrect(status);
 }
