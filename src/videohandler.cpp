@@ -1,8 +1,8 @@
 #include "videohandler.h"
 
 VideoHandler::VideoHandler(QObject *parent)
-    : QObject{parent}, mIsValid{false}, mVideoSink{nullptr}, mClassId{-1},
-      mScore{0}, mInferenceCorrect{false} {
+    : QObject{parent}, mVideoSink{nullptr}, mClassId{-1},
+      mScore{0}, mInferenceStatus{false} {
   mTimer.setInterval(Constants::General::inferenceDelayMs);
   connect(&mTimer, &QTimer::timeout, this, &VideoHandler::processFrame);
 }
@@ -23,22 +23,13 @@ void VideoHandler::setVideoSink(QVideoSink *newVideoSink) noexcept {
   mTimer.start();
 }
 
-bool VideoHandler::inferenceCorrect() const { return mInferenceCorrect; }
+bool VideoHandler::inferenceStatus() const { return mInferenceStatus; }
 
-void VideoHandler::setInferenceCorrect(bool newInferenceCorrect) {
-  if (mInferenceCorrect == newInferenceCorrect)
+void VideoHandler::setInferenceStatus(bool newInferenceStatus) {
+  if (mInferenceStatus == newInferenceStatus)
     return;
-  mInferenceCorrect = newInferenceCorrect;
-  emit inferenceCorrectChanged();
-}
-
-bool VideoHandler::isValid() const noexcept { return mIsValid; }
-
-void VideoHandler::setIsValid(bool newIsValid) noexcept {
-  if (mIsValid == newIsValid)
-    return;
-  mIsValid = newIsValid;
-  emit isValidChanged();
+  mInferenceStatus = newInferenceStatus;
+  emit inferenceStatusChanged();
 }
 
 float VideoHandler::score() const { return mScore; }
@@ -62,6 +53,11 @@ void VideoHandler::setClassId(int newClassId) {
 ///////////////////////////END QML CONNECTIONS//////////////////////////////////
 
 void VideoHandler::processFrame() {
+  if (mVideoSink.isNull()) {
+    qCritical() << "VideoHandler::processFrame. Start process frame when video sink is null.";
+    return;
+  }
+
   QVideoFrame frame = mVideoSink->videoFrame();
 
   QElapsedTimer timer;
@@ -90,5 +86,5 @@ void VideoHandler::processImage(const QImage &image) noexcept {
   const auto [status, classId, score] = mModel.forward(inputImage);
   setClassId(classId);
   setScore(score);
-  setInferenceCorrect(status);
+  setInferenceStatus(status);
 }

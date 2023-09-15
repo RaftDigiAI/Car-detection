@@ -20,7 +20,7 @@ TensorflowModel::TensorflowModel(QObject *parent) : QObject{parent} {
     mInput = mInterpreter->typed_input_tensor<uchar>(0);
 }
 
-const std::tuple<bool, int, float>
+std::tuple<bool, int, float>
 TensorflowModel::forward(const QImage &image) noexcept {
   QElapsedTimer timer;
 
@@ -39,7 +39,7 @@ TensorflowModel::forward(const QImage &image) noexcept {
   }
 
   timer.start();
-  // Function defination:
+  // Function definition:
   // memcpy(void* destination, const void* source, std::size_t count);
   std::memcpy(mInput, inputImage, Constants::Model::size);
   qDebug() << "TensorflowModel::forward. Copy time:" << timer.nsecsElapsed()
@@ -65,7 +65,7 @@ QString TensorflowModel::placeModel() {
 
   if (mFileModel == nullptr) {
     qCritical() << "TensorflowModel::placeModel. Model not exist.";
-    return QString();
+    return {};
   }
 
   qDebug() << "TensorflowModel::placeModel. Try load:"
@@ -76,7 +76,7 @@ QString TensorflowModel::placeModel() {
 std::pair<int, float> TensorflowModel::processOutput() {
   // Model output:
   // detection_boxes: Bounding box for each detection.
-  // detection_classes: Object class for each detection. Labelmap.
+  // detection_classes: Object class for each detection.
   // detection_scores: Confidence scores for each detection.
   // num_detections: Total number of detections.
   const uint countDetected{static_cast<uint>(*getOutput<float>(3))};
@@ -87,7 +87,7 @@ std::pair<int, float> TensorflowModel::processOutput() {
   itUsable &= detectedScores != nullptr;
 
   std::map<int, float> predictions{{Constants::Model::carClass, 0}};
-  std::pair<int, float> maxPredictions{0, 0};
+  //  std::pair<int, float> maxPredictions{0, 0};
 
   for (uint i = 0; itUsable && (i < countDetected); i++) {
     const auto &classId = static_cast<uchar>(detectedClasses[i]);
@@ -98,13 +98,14 @@ std::pair<int, float> TensorflowModel::processOutput() {
       predictions.try_emplace(classId, 0);
       predictions[classId] = std::max(predictions[classId], score);
 
-      if (maxPredictions.second < predictions[classId])
-        maxPredictions = {classId, predictions[classId]};
-
+      //      if (maxPredictions.second < predictions[classId])
+      //        maxPredictions = {classId, predictions[classId]};
     }
   }
 
   qDebug() << predictions;
 
-  return maxPredictions;
+  std::pair<int, float> result = {Constants::Model::carClass,
+                                  predictions[Constants::Model::carClass]};
+  return result;
 }

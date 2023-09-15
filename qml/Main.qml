@@ -2,17 +2,25 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtMultimedia
+import QtQuick.Controls.Material
 import CarPrice
 
-ApplicationWindow {
+Window {
     id: root
 
+    // Default camera size.
     width: 640
     height: 480
     visible: true
 
-    onClosing: camera.stop()
+    readonly property double aspectRation: 4 / 3
+    property bool itLandscape: width > height
 
+    // Theme
+    Material.theme: Material.Light
+
+    // Default camera state - is Active
+    //    onClosing: camera.stop()
     MediaDevices {
         id: mediaDevices
     }
@@ -36,33 +44,54 @@ ApplicationWindow {
         videoSink: preview.videoSink
     }
 
-    VideoOutput {
-        id: preview
-        anchors.fill: parent
+    Component.onCompleted: {
+        preview.rotation = itLandscape ? 90 : 0
     }
 
-    footer: Item {
-        height: 0.05 * parent.height
-        Text {
-            id: detectionStatus
-            anchors.left: parent
-            anchors.top: parent
-            anchors.bottom: parent
-            text: "Finded object:" + handler.classId + ", score" + handler.score
+    VideoOutput {
+        id: preview
+        anchors.centerIn: parent
+        width: height * aspectRation
+        height: parent.height
+    }
+
+    Rectangle {
+        id: carItem
+        color: Material.background
+        height: carQuestion.height
+        width: carQuestion.width + icon.width * 1.5
+
+        radius: 20
+
+        anchors {
+            top: parent.top
+            left: parent.left
         }
 
+        anchors.margins: 10
+
         Text {
-            id: inferenseStatus
-
-            anchors.top: parent
-            anchors.bottom: parent
-            anchors.left: detectionStatus.right
-            anchors.margins: {
-                left: 10
+            id: carQuestion
+            x: 5
+            width: 92
+            height: 20
+            text: "Car on frame?"
+            anchors {
+                top: parent.top
+                bottom: parent.botom
             }
+        }
 
-            text: handler.inferenceCorrect ? qsTr("Inference fine") : qsTr(
-                                                 "Problem with model")
+        Image {
+            id: icon
+            source: handler.score > 0.5 ? "qrc:/res/check.svg" : "qrc:/res/discard.svg"
+            height: parent.height / 2
+            width: height
+            anchors {
+                top: carQuestion.top
+                left: carQuestion.right
+                bottom: carQuestion.bottom
+            }
         }
     }
 }

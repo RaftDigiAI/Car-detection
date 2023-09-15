@@ -10,48 +10,50 @@
 #include <QVideoSink>
 
 class VideoHandler : public QObject {
-  Q_OBJECT
+Q_OBJECT
   QML_ELEMENT
 
-  Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY
-                 videoSinkChanged FINAL)
-
-  Q_PROPERTY(
-      bool isValid READ isValid WRITE setIsValid NOTIFY isValidChanged FINAL)
-
-  Q_PROPERTY(bool inferenceCorrect READ inferenceCorrect WRITE
-                 setInferenceCorrect NOTIFY inferenceCorrectChanged FINAL)
-
-  Q_PROPERTY(
-      int classId READ classId WRITE setClassId NOTIFY classIdChanged FINAL)
-  Q_PROPERTY(float score READ score WRITE setScore NOTIFY scoreChanged FINAL)
+  Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY videoSinkChanged FINAL)
+  Q_PROPERTY(bool inferenceStatus READ inferenceStatus NOTIFY inferenceStatusChanged FINAL)
+  Q_PROPERTY(int classId READ classId NOTIFY classIdChanged FINAL)
+  Q_PROPERTY(float score READ score NOTIFY scoreChanged FINAL)
 
 public:
-  VideoHandler(QObject *parent = nullptr);
+  explicit VideoHandler(QObject *parent = nullptr);
 
+  /**
+   * Get pointer to current video sink.
+   * @return Pointer to current video sink.
+   */
   QVideoSink *videoSink() const noexcept;
+
+  /**
+   * Set new video sink.
+   * @param newVideoSink New video sink.
+   */
   void setVideoSink(QVideoSink *newVideoSink) noexcept;
 
-  bool isValid() const noexcept;
-  void setIsValid(bool newIsValid) noexcept;
+  /**
+   * Return current status of inference
+   * @return Field `inferenceStatus`. Equal `true` if we don't have any problems with model and we can made inference.
+   * Otherwise `false`.
+   */
+  bool inferenceStatus() const;
 
-  bool inferenceCorrect() const;
-  void setInferenceCorrect(bool newInferenceCorrect);
-
+  /**
+   * @return Class id that was detected
+   */
   int classId() const;
-  void setClassId(int newClassId);
 
+  /**
+   * @return Score detected class
+   */
   float score() const;
-  void setScore(float newScore);
 
 signals:
   void videoSinkChanged();
 
-  void isValidChanged();
-
-  void objectOnFrameChanged();
-
-  void inferenceCorrectChanged();
+  void inferenceStatusChanged();
 
   void classIdChanged();
 
@@ -59,23 +61,46 @@ signals:
 
 private slots:
   /**
-   * @brief proccesFrame
-   * @param frame
+   * Get current frame and push it to the model.
    */
   void processFrame();
 
 private:
+  /**
+   * Set current inference status and emit signal if it was changed.
+   * Signal: inferenceStatusChanged
+   * @param newInferenceStatus
+   */
+  void setInferenceStatus(bool newInferenceStatus);
+
+  /**
+   * Set detected class id and emit signal if it was changed.
+   * Signal: classIdChanged
+   * @param newClassId
+   */
+  void setClassId(int newClassId);
+
+  /**
+   * Set score detected class and emit signal if it was changed.
+   * Signal: scoreChanged
+   * @param newScore
+   */
+  void setScore(float newScore);
+
+  /**
+   * Apply transform to image and push result image to model.
+   * @param image Image for model.
+   */
   void processImage(const QImage &image) noexcept;
 
 private:
   QTimer mTimer;
 
   TensorflowModel mModel;
-  bool mInferenceCorrect;
+  bool mInferenceStatus;
 
   int mClassId;
   float mScore;
 
   QPointer<QVideoSink> mVideoSink;
-  bool mIsValid;
 };

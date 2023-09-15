@@ -5,7 +5,7 @@ project(CarPrice VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.3 REQUIRED COMPONENTS Quick Multimedia)
+find_package(Qt6 6.3 REQUIRED COMPONENTS Quick Multimedia Svg)
 
 qt_standard_project_setup()
 
@@ -70,8 +70,9 @@ endif()
 
 target_link_libraries(appCarPrice
     PRIVATE Qt6::Quick
-    Qt6::Multimedia
-    tensorflowlite
+            Qt6::Multimedia
+            Qt6::Svg
+            tensorflowlite
 )
 
 include(GNUInstallDirs)
