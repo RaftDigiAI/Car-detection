@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/res">
-        <file alias="model4">resource/lite-model_efficientdet_lite0_detection_default_1.tflite</file>
+        <file compress-algo="best" alias="model">resource/lite-model_efficientdet_lite0_detection_default_1.tflite</file>
         <file alias="discard.svg">resource/Icons/xmark-solid.svg</file>
         <file alias="check.svg">resource/Icons/check-solid.svg</file>
     </qresource>

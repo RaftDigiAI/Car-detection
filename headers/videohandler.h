@@ -10,7 +10,7 @@
 #include <QVideoSink>
 
 class VideoHandler : public QObject {
-Q_OBJECT
+  Q_OBJECT
   QML_ELEMENT
 
   Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY videoSinkChanged FINAL)
@@ -50,6 +50,9 @@ public:
    */
   float score() const;
 
+  QSize videoSize() const;
+  void setVideoSize(const QSize &newVideoSize);
+
 signals:
   void videoSinkChanged();
 
@@ -58,6 +61,8 @@ signals:
   void classIdChanged();
 
   void scoreChanged();
+
+  void videoSizeChanged();
 
 private slots:
   /**
@@ -103,4 +108,7 @@ private:
   float mScore;
 
   QPointer<QVideoSink> mVideoSink;
+
+  QSize mVideoSize;
+  Q_PROPERTY(QSize videoSize READ videoSize WRITE setVideoSize NOTIFY videoSizeChanged FINAL)
 };

@@ -9,18 +9,14 @@ Window {
     id: root
 
     // Default camera size.
-    width: 640
-    height: 480
     visible: true
 
-    readonly property double aspectRation: 4 / 3
     property bool itLandscape: width > height
 
     // Theme
     Material.theme: Material.Light
 
     // Default camera state - is Active
-    //    onClosing: camera.stop()
     MediaDevices {
         id: mediaDevices
     }
@@ -34,6 +30,7 @@ Window {
             id: camera
             cameraDevice: mediaDevices.defaultVideoInput
             active: true
+            focusMode: Camera.FocusModeInfinity
         }
 
         videoOutput: preview
@@ -42,6 +39,7 @@ Window {
     VideoHandler {
         id: handler
         videoSink: preview.videoSink
+        onVideoSizeChanged: console.log("Video size:" + videoSize)
     }
 
     Component.onCompleted: {
@@ -50,9 +48,19 @@ Window {
 
     VideoOutput {
         id: preview
+
+        property double aspectRation: 1
+
         anchors.centerIn: parent
-        width: height * aspectRation
+        // View set preview eqaul parent size, but what if videSize will be
         height: parent.height
+        width: aspectRation * height
+
+        fillMode: VideoOutput.Stretch
+
+        onFrameUpdated: {
+            aspectRation = preview.videoSink.videoSize.height / preview.videoSink.videoSize.width
+        }
     }
 
     Rectangle {
