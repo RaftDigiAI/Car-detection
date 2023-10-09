@@ -1,7 +1,10 @@
 #include "tensorflowmodel.h"
 
-TensorflowModel::TensorflowModel(QObject *parent) : QObject{parent} {
-  auto pathToModel = placeModel().toStdString();
+TensorflowModel::TensorflowModel() : AbstractTensorflowModel() {
+  auto pathToModel =
+      AbstractTensorflowModel::placeModel(Constants::General::modelName)
+          .toStdString();
+
   // Init model
   mModel = tflite::FlatBufferModel::BuildFromFile(pathToModel.c_str());
   // Build the interpreter
@@ -9,7 +12,11 @@ TensorflowModel::TensorflowModel(QObject *parent) : QObject{parent} {
   auto status = builder(&mInterpreter);
   qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
            << (status == kTfLiteOk);
-  // Allocate tensors
+  // If set to the value -1, the number of threads used
+  // will be implementation-defined and platform-dependent.
+  builder.SetNumThreads(4);
+
+  // Allocate tensors if previously state is ok
   if (status == kTfLiteOk) {
     status = mInterpreter->AllocateTensors();
     qDebug() << "TensorflowModel::TensorflowModel. Tensors allocated?:"
@@ -22,36 +29,34 @@ TensorflowModel::TensorflowModel(QObject *parent) : QObject{parent} {
 
 std::tuple<bool, int, float>
 TensorflowModel::forward(const QImage &image) noexcept {
-  QElapsedTimer timer;
-
   if (mInput == nullptr) {
     qWarning() << "TensorflowModel::forward(const QImage &image)."
                << "Model input equal nullptr.";
     return {false, -1, -1};
   }
 
-  qDebug() << "TensorflowModel::forward. Start forward: ";
-  const auto *inputImage = image.bits();
+  const auto transformedImage = transform(image);
+  const auto *inputImage = transformedImage.bits();
 
   if (inputImage == nullptr) {
     qWarning() << "TensorflowModel::forward. Image equal nullptr.";
     return {false, -1, -1};
   }
 
-  timer.start();
   // Function definition:
   // memcpy(void* destination, const void* source, std::size_t count);
   std::memcpy(mInput, inputImage, Constants::Model::size);
-  qDebug() << "TensorflowModel::forward. Copy time:" << timer.nsecsElapsed()
-           << "ns.";
 
-  timer.restart();
+  QElapsedTimer timer;
+  timer.start();
   const auto status = mInterpreter->Invoke();
   qDebug() << "TensorflowModel::forward. Inference time:" << timer.elapsed()
            << "ms.";
 
   if (status == kTfLiteOk) {
+    timer.restart();
     const auto &[classId, score] = processOutput();
+    qDebug() << "TensorflowModel::forward. Process time:" << timer.elapsed();
     return {true, classId, score};
   }
 
@@ -59,21 +64,23 @@ TensorflowModel::forward(const QImage &image) noexcept {
   return {false, -1, -1};
 }
 
-QString TensorflowModel::placeModel() {
-  QFile modelFile(Constants::General::modelName);
-  mFileModel = QTemporaryFile::createNativeFile(modelFile);
-
-  if (mFileModel == nullptr) {
-    qCritical() << "TensorflowModel::placeModel. Model not exist.";
-    return {};
+bool TensorflowModel::enableGPU() {
+  mDelegate = TfLiteGpuDelegateV2Create(nullptr);
+  const auto status = mInterpreter->ModifyGraphWithDelegate(mDelegate);
+  if (status != kTfLiteOk) {
+    qCritical()
+        << "TensorflowModel::TensorflowModel. Cannot use delegate. Error:"
+        << status;
+    TfLiteGpuDelegateV2Delete(mDelegate);
+    return false;
   }
 
-  qDebug() << "TensorflowModel::placeModel. Try load:"
-           << mFileModel->fileName();
-  return mFileModel->fileName();
+  return true;
 }
 
-std::pair<int, float> TensorflowModel::processOutput() {
+TensorflowModel::~TensorflowModel() { TfLiteGpuDelegateV2Delete(mDelegate); }
+
+std::pair<int, float> TensorflowModel::processOutput() const noexcept {
   // Model output:
   // detection_boxes: Bounding box for each detection.
   // detection_classes: Object class for each detection.
@@ -87,8 +94,7 @@ std::pair<int, float> TensorflowModel::processOutput() {
   itUsable &= detectedScores != nullptr;
 
   std::map<int, float> predictions{{Constants::Model::carClass, 0}};
-  //  std::pair<int, float> maxPredictions{0, 0};
-
+  // In these model countDetected cannot be more than 25.
   for (uint i = 0; itUsable && (i < countDetected); i++) {
     const auto &classId = static_cast<uchar>(detectedClasses[i]);
     const auto &score = detectedScores[i];
@@ -97,15 +103,17 @@ std::pair<int, float> TensorflowModel::processOutput() {
     if (itDetected) {
       predictions.try_emplace(classId, 0);
       predictions[classId] = std::max(predictions[classId], score);
-
-      //      if (maxPredictions.second < predictions[classId])
-      //        maxPredictions = {classId, predictions[classId]};
     }
   }
 
   qDebug() << predictions;
 
-  std::pair<int, float> result = {Constants::Model::carClass,
-                                  predictions[Constants::Model::carClass]};
-  return result;
+  return {Constants::Model::carClass, predictions[Constants::Model::carClass]};
+}
+
+const QImage TensorflowModel::transform(const QImage &image) noexcept {
+  QImage inputImage{image.scaled(Constants::Model::inputWidth,
+                                 Constants::Model::inputHeight)};
+  inputImage.convertTo(Constants::Model::imgFormat);
+  return inputImage;
 }

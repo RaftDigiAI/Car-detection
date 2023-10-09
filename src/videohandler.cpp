@@ -66,7 +66,8 @@ void VideoHandler::processFrame() {
   qDebug() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
            << "ms.";
 
-  mVideoSink->setVideoFrame(frame);
+  mVideoSize = frame.toImage().size();
+  emit videoSizeChanged();
 }
 
 void VideoHandler::processImage(const QImage &image) noexcept {
@@ -74,17 +75,22 @@ void VideoHandler::processImage(const QImage &image) noexcept {
     qDebug() << "VideoHandler::processImage. Image not valid.";
     return;
   }
-  QElapsedTimer timer;
-  timer.start();
-  // Transformation section.
-  QImage inputImage{image.scaled(Constants::Model::inputWidth,
-                                 Constants::Model::inputHeight)};
-  inputImage.convertTo(QImage::Format_RGB888);
-  // Pass image to model.
-  qDebug() << "VideoHandler::processImage. Resize time:" << timer.elapsed();
   // Process results.
-  const auto [status, classId, score] = mModel.forward(inputImage);
+  const auto &[status, classId, score] = mModel.forward(image);
   setClassId(classId);
   setScore(score);
   setInferenceStatus(status);
+}
+
+QSize VideoHandler::videoSize() const
+{
+  return mVideoSize;
+}
+
+void VideoHandler::setVideoSize(const QSize &newVideoSize)
+{
+  if (mVideoSize == newVideoSize)
+    return;
+  mVideoSize = newVideoSize;
+  emit videoSizeChanged();
 }

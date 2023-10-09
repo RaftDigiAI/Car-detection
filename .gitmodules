@@ -1,8 +1,15 @@
 [submodule "third-party/tensorflow"]
 	path = third-party/tensorflow
 	url = https://github.com/tensorflow/tensorflow.git
-        branch = v2.13.0
 [submodule "third-party/flatbuffers"]
 	path = third-party/flatbuffers
 	url = https://github.com/google/flatbuffers.git
-        branch = v23.5.26
+[submodule "third-party/abseil-cpp"]
+	path = third-party/abseil-cpp
+	url = https://github.com/abseil/abseil-cpp.git
+[submodule "third-party/tflite-support"]
+	path = third-party/tflite-support
+	url = https://github.com/tensorflow/tflite-support.git
+[submodule "third-party/protobuf"]
+	path = third-party/protobuf
+	url = https://github.com/protocolbuffers/protobuf.git
