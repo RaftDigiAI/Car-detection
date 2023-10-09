@@ -9,6 +9,8 @@ find_package(Qt6 6.3 REQUIRED COMPONENTS Quick Multimedia Svg)
 
 qt_standard_project_setup()
 
+#add_compile_definitions(QT_NO_DEBUG_OUTPUT)
+
 include_directories(src/
     qml/
     headers/
