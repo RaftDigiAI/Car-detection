@@ -17,7 +17,7 @@ constexpr QImage::Format imgFormat = QImage::Format_RGB888;
 
 namespace General {
 constexpr int inferenceDelayMs = 1000;
-constexpr char modelName[] = "model4";
+constexpr char modelName[] = "model int8";
 };
 
 }

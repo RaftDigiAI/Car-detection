@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tensorflowmodel.h"
+#include "tfmodel.h"
 #include <QObject>
 #include <QPainter>
 #include <QQmlEngine>
@@ -62,8 +62,6 @@ signals:
 
   void scoreChanged();
 
-  void videoSizeChanged();
-
 private slots:
   /**
    * Get current frame and push it to the model.
@@ -99,16 +97,13 @@ private:
   void processImage(const QImage &image) noexcept;
 
 private:
-  QTimer mTimer;
-
-  TensorflowModel mModel;
+  QTimer mModelTimer;
+  
+  TFModel mModel;
   bool mInferenceStatus;
 
   int mClassId;
   float mScore;
 
   QPointer<QVideoSink> mVideoSink;
-
-  QSize mVideoSize;
-  Q_PROPERTY(QSize videoSize READ videoSize WRITE setVideoSize NOTIFY videoSizeChanged FINAL)
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "abstracttensorflowmodel.h"
+#include "abstracttfmodel.h"
 #include "constants.hpp"
 #include <QDebug>
 #include <QElapsedTimer>
@@ -17,9 +17,9 @@
 #include <tensorflow/lite/model.h>
 #include <utility>
 
-class TensorflowModel : protected AbstractTensorflowModel {
+class TFModel : protected AbstractTFModel {
 public:
-  explicit TensorflowModel();
+  explicit TFModel();
 
   /**
    * Make model forward
@@ -31,7 +31,7 @@ public:
 
   bool enableGPU() override;
 
-  ~TensorflowModel();
+  ~TFModel();
 
 private:
   /**
@@ -68,6 +68,6 @@ private:
 };
 
 template <typename T>
-const T *TensorflowModel::getOutput(const int &numOutput) const noexcept {
+const T *TFModel::getOutput(const int &numOutput) const noexcept {
   return mInterpreter->typed_output_tensor<T>(numOutput);
 }

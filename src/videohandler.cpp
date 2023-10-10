@@ -1,10 +1,10 @@
 #include "videohandler.h"
 
 VideoHandler::VideoHandler(QObject *parent)
-    : QObject{parent}, mVideoSink{nullptr}, mClassId{-1},
-      mScore{0}, mInferenceStatus{false} {
-  mTimer.setInterval(Constants::General::inferenceDelayMs);
-  connect(&mTimer, &QTimer::timeout, this, &VideoHandler::processFrame);
+    : QObject{parent}, mVideoSink{nullptr}, mClassId{-1}, mScore{0},
+      mInferenceStatus{false} {
+  mModelTimer.setInterval(Constants::General::inferenceDelayMs);
+  connect(&mModelTimer, &QTimer::timeout, this, &VideoHandler::processFrame);
 }
 
 ///////////////////////QML CONNECTIONS/////////////////////////////////////////
@@ -20,7 +20,7 @@ void VideoHandler::setVideoSink(QVideoSink *newVideoSink) noexcept {
   mVideoSink = newVideoSink;
   emit videoSinkChanged();
 
-  mTimer.start();
+  mModelTimer.start();
 }
 
 bool VideoHandler::inferenceStatus() const { return mInferenceStatus; }
@@ -54,20 +54,18 @@ void VideoHandler::setClassId(int newClassId) {
 
 void VideoHandler::processFrame() {
   if (mVideoSink.isNull()) {
-    qCritical() << "VideoHandler::processFrame. Start process frame when video sink is null.";
+    qCritical() << "VideoHandler::processFrame. Start process frame when video "
+                   "sink is null.";
     return;
   }
 
-  QVideoFrame frame = mVideoSink->videoFrame();
+  const QVideoFrame frame = mVideoSink->videoFrame();
 
   QElapsedTimer timer;
   timer.start();
   processImage(frame.toImage());
-  qDebug() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
-           << "ms.";
-
-  mVideoSize = frame.toImage().size();
-  emit videoSizeChanged();
+  qInfo() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
+          << "ms.";
 }
 
 void VideoHandler::processImage(const QImage &image) noexcept {
@@ -75,22 +73,10 @@ void VideoHandler::processImage(const QImage &image) noexcept {
     qDebug() << "VideoHandler::processImage. Image not valid.";
     return;
   }
+
   // Process results.
   const auto &[status, classId, score] = mModel.forward(image);
   setClassId(classId);
   setScore(score);
   setInferenceStatus(status);
-}
-
-QSize VideoHandler::videoSize() const
-{
-  return mVideoSize;
-}
-
-void VideoHandler::setVideoSize(const QSize &newVideoSize)
-{
-  if (mVideoSize == newVideoSize)
-    return;
-  mVideoSize = newVideoSize;
-  emit videoSizeChanged();
 }

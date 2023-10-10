@@ -1,6 +1,6 @@
-#include "abstracttensorflowmodel.h"
+#include "abstracttfmodel.h"
 
-QString AbstractTensorflowModel::placeModel(const QString &modelName) {
+QString AbstractTFModel::placeModel(const QString &modelName) {
   if (QFile::exists(modelName))
     return modelName;
 
