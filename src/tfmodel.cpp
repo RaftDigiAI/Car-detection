@@ -2,8 +2,7 @@
 
 TFModel::TFModel() : AbstractTFModel() {
   auto pathToModel =
-      AbstractTFModel::placeModel(Constants::General::modelName)
-          .toStdString();
+      AbstractTFModel::placeModel(Constants::General::modelName).toStdString();
 
   // Init model
   mModel = tflite::FlatBufferModel::BuildFromFile(pathToModel.c_str());
@@ -27,8 +26,7 @@ TFModel::TFModel() : AbstractTFModel() {
     mInput = mInterpreter->typed_input_tensor<uchar>(0);
 }
 
-std::tuple<bool, int, float>
-TFModel::forward(const QImage &image) noexcept {
+std::tuple<bool, int, float> TFModel::forward(const QImage &image) noexcept {
   if (mInput == nullptr) {
     qWarning() << "TensorflowModel::forward(const QImage &image)."
                << "Model input equal nullptr.";
@@ -47,13 +45,17 @@ TFModel::forward(const QImage &image) noexcept {
   // memcpy(void* destination, const void* source, std::size_t count);
   std::memcpy(mInput, inputImage, Constants::Model::size);
 
-  const auto status = mInterpreter->Invoke();
-//  qInfo() << "TensorflowModel::forward. Inference time:" << timer.elapsed()
-//           << "ms.";
+  {
+    QElapsedTimer timer;
+    timer.start();
+    const auto status = mInterpreter->Invoke();
+    qInfo() << "TensorflowModel::forward. Inference time:" << timer.elapsed()
+            << "ms.";
 
-  if (status == kTfLiteOk) {
-    const auto &[classId, score] = processOutput();
-    return {true, classId, score};
+    if (status == kTfLiteOk) {
+      const auto &[classId, score] = processOutput();
+      return {true, classId, score};
+    }
   }
 
   qWarning() << "TensorflowModel::forward. Cannot make forward;";

@@ -9,11 +9,8 @@ find_package(Qt6 6.3 REQUIRED COMPONENTS Quick Multimedia Svg)
 
 qt_standard_project_setup()
 
-<<<<<<< Updated upstream
-=======
 add_compile_definitions(QT_NO_DEBUG_OUTPUT)
 
->>>>>>> Stashed changes
 include_directories(src/
     qml/
     headers/
