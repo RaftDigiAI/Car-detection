@@ -1,15 +1,15 @@
 #pragma once
 
-#include "abstracttensorflowmodel.h"
+#include "abstracttfmodel.h"
 #include <tensorflow/lite/delegates/gpu/delegate.h>
 #include <tensorflow/lite/interpreter.h>
 #include <tensorflow/lite/kernels/register.h>
 #include <tensorflow/lite/model.h>
 #include <tensorflow_lite_support/cc/task/vision/object_detector.h>
 
-class TensorflowModelMetadata : protected AbstractTensorflowModel {
+class TFModelMetadata : protected AbstractTFModel {
 public:
-  explicit TensorflowModelMetadata();
+  explicit TFModelMetadata();
 
   /**
    * Make model forward

@@ -39,7 +39,6 @@ Window {
     VideoHandler {
         id: handler
         videoSink: preview.videoSink
-        onVideoSizeChanged: console.log("Video size:" + videoSize)
     }
 
     Component.onCompleted: {

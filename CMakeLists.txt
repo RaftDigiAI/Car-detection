@@ -9,6 +9,8 @@ find_package(Qt6 6.3 REQUIRED COMPONENTS Quick Multimedia Svg)
 
 qt_standard_project_setup()
 
+add_compile_definitions(QT_NO_DEBUG_OUTPUT)
+
 include_directories(src/
     qml/
     headers/
@@ -26,9 +28,9 @@ qt_add_executable(appCarPrice
     headers/constants.hpp
     resource.qrc
 
-    headers/tensorflowmodel.h src/tensorflowmodel.cpp
-    headers/tensorflowmodelmetadata.h src/tensorflowmodelmetadata.cpp
-    headers/abstracttensorflowmodel.h src/abstracttensorflowmodel.cpp
+    headers/tfmodel.h src/tfmodel.cpp
+    headers/tfmodelmetadata.h src/tfmodelmetadata.cpp
+    headers/abstracttfmodel.h src/abstracttfmodel.cpp
 )
 
 qt_add_qml_module(appCarPrice
