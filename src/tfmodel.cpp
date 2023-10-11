@@ -1,8 +1,7 @@
 #include "tfmodel.h"
 
-TFModel::TFModel() : AbstractTFModel() {
-  auto pathToModel =
-      AbstractTFModel::placeModel(Constants::General::modelName).toStdString();
+TFModel::TFModel(QString modelName) : AbstractTFModel() {
+  auto pathToModel = AbstractTFModel::placeModel(modelName).toStdString();
 
   // Init model
   mModel = tflite::FlatBufferModel::BuildFromFile(pathToModel.c_str());
@@ -13,7 +12,7 @@ TFModel::TFModel() : AbstractTFModel() {
            << (status == kTfLiteOk);
   // If set to the value -1, the number of threads used
   // will be implementation-defined and platform-dependent.
-  builder.SetNumThreads(4);
+  builder.SetNumThreads(1);
 
   // Allocate tensors if previously state is ok
   if (status == kTfLiteOk) {
@@ -96,7 +95,7 @@ std::pair<int, float> TFModel::processOutput() const noexcept {
   for (uint i = 0; itUsable && (i < countDetected); i++) {
     const auto &classId = static_cast<uchar>(detectedClasses[i]);
     const auto &score = detectedScores[i];
-    const bool itDetected{detectedScores[i] >= Constants::Model::threshold};
+    const bool itDetected{score >= Constants::Model::threshold};
 
     if (itDetected) {
       predictions.try_emplace(classId, 0);

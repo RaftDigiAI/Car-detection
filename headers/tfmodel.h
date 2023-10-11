@@ -17,9 +17,9 @@
 #include <tensorflow/lite/model.h>
 #include <utility>
 
-class TFModel : protected AbstractTFModel {
+class TFModel : public AbstractTFModel {
 public:
-  explicit TFModel();
+  explicit TFModel(QString modelName);
 
   /**
    * Make model forward
@@ -29,6 +29,11 @@ public:
    */
   std::tuple<bool, int, float> forward(const QImage &image) noexcept override;
 
+  /**
+ * Enables GPU for the TFModel.
+ *
+ * @return true if GPU is enabled successfully, false otherwise
+ */
   bool enableGPU() override;
 
   ~TFModel();
