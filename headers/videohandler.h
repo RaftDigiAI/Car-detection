@@ -1,10 +1,11 @@
 #pragma once
 
-#include "tensorflowmodel.h"
+#include "tfmodelworker.h"
 #include <QObject>
 #include <QPainter>
 #include <QQmlEngine>
 #include <QString>
+#include <QThread>
 #include <QTimer>
 #include <QVideoFrame>
 #include <QVideoSink>
@@ -13,13 +14,16 @@ class VideoHandler : public QObject {
   Q_OBJECT
   QML_ELEMENT
 
-  Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY videoSinkChanged FINAL)
-  Q_PROPERTY(bool inferenceStatus READ inferenceStatus NOTIFY inferenceStatusChanged FINAL)
+  Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY
+                 videoSinkChanged FINAL)
+  Q_PROPERTY(bool inferenceStatus READ inferenceStatus NOTIFY
+                 inferenceStatusChanged FINAL)
   Q_PROPERTY(int classId READ classId NOTIFY classIdChanged FINAL)
   Q_PROPERTY(float score READ score NOTIFY scoreChanged FINAL)
 
 public:
   explicit VideoHandler(QObject *parent = nullptr);
+  ~VideoHandler();
 
   /**
    * Get pointer to current video sink.
@@ -35,8 +39,8 @@ public:
 
   /**
    * Return current status of inference
-   * @return Field `inferenceStatus`. Equal `true` if we don't have any problems with model and we can made inference.
-   * Otherwise `false`.
+   * @return Field `inferenceStatus`. Equal `true` if we don't have any problems
+   * with model and we can made inference. Otherwise `false`.
    */
   bool inferenceStatus() const;
 
@@ -50,8 +54,7 @@ public:
    */
   float score() const;
 
-  QSize videoSize() const;
-  void setVideoSize(const QSize &newVideoSize);
+
 
 signals:
   void videoSinkChanged();
@@ -62,13 +65,22 @@ signals:
 
   void scoreChanged();
 
-  void videoSizeChanged();
-
 private slots:
   /**
    * Get current frame and push it to the model.
    */
   void processFrame();
+
+  /**
+ * Updates the status of the video handler.
+ *
+ * @param inferenceStatus the new inference status
+ * @param detectedClass the detected class
+ * @param classScore the score of the detected class
+ */
+  void updateStatus(const bool &inferenceStatus = false,
+                    const int &detectedClass = -1,
+                    const double &classScore = 0);
 
 private:
   /**
@@ -92,23 +104,14 @@ private:
    */
   void setScore(float newScore);
 
-  /**
-   * Apply transform to image and push result image to model.
-   * @param image Image for model.
-   */
-  void processImage(const QImage &image) noexcept;
-
 private:
-  QTimer mTimer;
+  QTimer mModelTimer;
+  std::unique_ptr<TFModelWorker> mModelWorker;
+  QThread mThread;
 
-  TensorflowModel mModel;
   bool mInferenceStatus;
-
   int mClassId;
   float mScore;
 
   QPointer<QVideoSink> mVideoSink;
-
-  QSize mVideoSize;
-  Q_PROPERTY(QSize videoSize READ videoSize WRITE setVideoSize NOTIFY videoSizeChanged FINAL)
 };

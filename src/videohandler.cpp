@@ -1,10 +1,34 @@
 #include "videohandler.h"
 
 VideoHandler::VideoHandler(QObject *parent)
-    : QObject{parent}, mVideoSink{nullptr}, mClassId{-1},
-      mScore{0}, mInferenceStatus{false} {
-  mTimer.setInterval(Constants::General::inferenceDelayMs);
-  connect(&mTimer, &QTimer::timeout, this, &VideoHandler::processFrame);
+    : QObject{parent}, mVideoSink{nullptr}, mClassId{-1}, mScore{0},
+      mInferenceStatus{false} {
+  mModelWorker = std::make_unique<TFModelWorker>();
+  mModelWorker->moveToThread(&mThread);
+  mModelTimer.setInterval(Constants::General::inferenceDelayMs);
+
+  // Connections
+  connect(&mModelTimer, &QTimer::timeout, this, [&]() {
+    QMetaObject::invokeMethod(
+        mModelWorker.get(), "processImage", Qt::QueuedConnection,
+        Q_ARG(QImage, mVideoSink->videoFrame().toImage()));
+  });
+  connect(mModelWorker.get(), &TFModelWorker::proccesFailed, this,
+          [&]() { updateStatus(); });
+  connect(mModelWorker.get(), &TFModelWorker::imageProcessed, this,
+          [&](const int &classId, const double &score) {
+            updateStatus(true, classId, score);
+          });
+  connect(&mThread, &QThread::started, mModelWorker.get(),
+          &TFModelWorker::createModel);
+
+
+  mThread.start();
+}
+
+VideoHandler::~VideoHandler() {
+  mThread.quit();
+  mThread.wait();
 }
 
 ///////////////////////QML CONNECTIONS/////////////////////////////////////////
@@ -20,7 +44,7 @@ void VideoHandler::setVideoSink(QVideoSink *newVideoSink) noexcept {
   mVideoSink = newVideoSink;
   emit videoSinkChanged();
 
-  mTimer.start();
+  mModelTimer.start();
 }
 
 bool VideoHandler::inferenceStatus() const { return mInferenceStatus; }
@@ -54,43 +78,23 @@ void VideoHandler::setClassId(int newClassId) {
 
 void VideoHandler::processFrame() {
   if (mVideoSink.isNull()) {
-    qCritical() << "VideoHandler::processFrame. Start process frame when video sink is null.";
+    qCritical() << "VideoHandler::processFrame. Start process frame when video "
+                   "sink is null.";
     return;
   }
 
-  QVideoFrame frame = mVideoSink->videoFrame();
-
+  const QVideoFrame frame{mVideoSink->videoFrame()};
   QElapsedTimer timer;
   timer.start();
-  processImage(frame.toImage());
-  qDebug() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
-           << "ms.";
-
-  mVideoSize = frame.toImage().size();
-  emit videoSizeChanged();
+  mModelWorker->processImage(frame.toImage());
+  qInfo() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
+          << "ms.";
 }
 
-void VideoHandler::processImage(const QImage &image) noexcept {
-  if (image.isNull()) {
-    qDebug() << "VideoHandler::processImage. Image not valid.";
-    return;
-  }
-  // Process results.
-  const auto &[status, classId, score] = mModel.forward(image);
-  setClassId(classId);
-  setScore(score);
-  setInferenceStatus(status);
-}
-
-QSize VideoHandler::videoSize() const
-{
-  return mVideoSize;
-}
-
-void VideoHandler::setVideoSize(const QSize &newVideoSize)
-{
-  if (mVideoSize == newVideoSize)
-    return;
-  mVideoSize = newVideoSize;
-  emit videoSizeChanged();
+void VideoHandler::updateStatus(const bool &inferenceStatus,
+                                const int &detectedClass,
+                                const double &classScore) {
+  setInferenceStatus(inferenceStatus);
+  setScore(classScore);
+  setClassId(detectedClass);
 }

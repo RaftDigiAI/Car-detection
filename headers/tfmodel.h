@@ -1,6 +1,6 @@
 #pragma once
 
-#include "abstracttensorflowmodel.h"
+#include "abstracttfmodel.h"
 #include "constants.hpp"
 #include <QDebug>
 #include <QElapsedTimer>
@@ -17,9 +17,9 @@
 #include <tensorflow/lite/model.h>
 #include <utility>
 
-class TensorflowModel : protected AbstractTensorflowModel {
+class TFModel : public AbstractTFModel {
 public:
-  explicit TensorflowModel();
+  explicit TFModel(QString modelName);
 
   /**
    * Make model forward
@@ -29,9 +29,14 @@ public:
    */
   std::tuple<bool, int, float> forward(const QImage &image) noexcept override;
 
+  /**
+ * Enables GPU for the TFModel.
+ *
+ * @return true if GPU is enabled successfully, false otherwise
+ */
   bool enableGPU() override;
 
-  ~TensorflowModel();
+  ~TFModel();
 
 private:
   /**
@@ -68,6 +73,6 @@ private:
 };
 
 template <typename T>
-const T *TensorflowModel::getOutput(const int &numOutput) const noexcept {
+const T *TFModel::getOutput(const int &numOutput) const noexcept {
   return mInterpreter->typed_output_tensor<T>(numOutput);
 }

@@ -4,9 +4,9 @@
 #include <QFile>
 #include <QObject>
 
-class AbstractTensorflowModel {
+class AbstractTFModel {
 public:
-  virtual ~AbstractTensorflowModel(){};
+  virtual ~AbstractTFModel(){};
 
   /**
    * Make model forward
