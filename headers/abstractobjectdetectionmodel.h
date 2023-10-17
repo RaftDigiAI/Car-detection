@@ -6,7 +6,7 @@
 
 class AbstractObjectDetectionModel {
 public:
-  virtual ~AbstractObjectDetectionModel(){};
+  virtual ~AbstractObjectDetectionModel() = default;
 
   /**
    * Make model forward

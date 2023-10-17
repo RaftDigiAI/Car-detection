@@ -26,6 +26,8 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
     mInput = mInterpreter->typed_input_tensor<uchar>(0);
 }
 
+TFModel::~TFModel() { TfLiteGpuDelegateV2Delete(mDelegate); }
+
 std::map<int, float> TFModel::forward(const QImage &image) noexcept {
   if (mInput == nullptr) {
     qWarning() << "TensorflowModel::forward(const QImage &image)."
@@ -56,7 +58,7 @@ std::map<int, float> TFModel::forward(const QImage &image) noexcept {
   return {};
 }
 
-bool TFModel::enableGPU() {
+bool TFModel::enableGPU() noexcept {
   mDelegate = TfLiteGpuDelegateV2Create(nullptr);
   if (const auto status = mInterpreter->ModifyGraphWithDelegate(mDelegate);
       status != kTfLiteOk) {
@@ -70,15 +72,6 @@ bool TFModel::enableGPU() {
   return true;
 }
 
-TFModel::~TFModel() { TfLiteGpuDelegateV2Delete(mDelegate); }
-
-/**
- * Retrieves the predictions from the model output.
- * @return A map of predicted classes and their max confidence scores.
- * If no predictions were made, an empty map is returned
- * If on image detected few objects of the same class,
- * then only the max score from it will be returned
- */
 std::map<int, float> TFModel::processOutput() const noexcept {
   // Model output:
   // detection_boxes: Bounding box for each detection.
