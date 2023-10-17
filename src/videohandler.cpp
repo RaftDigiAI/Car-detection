@@ -5,7 +5,7 @@ VideoHandler::VideoHandler(QObject *parent)
       mInferenceStatus{false} {
   mModelWorker = std::make_unique<TFModelWorker>();
   mModelWorker->moveToThread(&mThread);
-  mModelTimer.setInterval(Constants::General::inferenceDelayMs);
+  mModelTimer.setInterval(constants::general::inferenceDelayMs);
 
   // Connections
   connect(&mModelTimer, &QTimer::timeout, this, [&]() {
@@ -13,7 +13,7 @@ VideoHandler::VideoHandler(QObject *parent)
         mModelWorker.get(), "processImage", Qt::QueuedConnection,
         Q_ARG(QImage, mVideoSink->videoFrame().toImage()));
   });
-  connect(mModelWorker.get(), &TFModelWorker::proccesFailed, this,
+  connect(mModelWorker.get(), &TFModelWorker::proccessFailed, this,
           [&]() { updateStatus(); });
   connect(mModelWorker.get(), &TFModelWorker::imageProcessed, this,
           [&](const int &classId, const double &score) {

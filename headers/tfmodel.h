@@ -1,7 +1,7 @@
 #pragma once
 
-#include "abstracttfmodel.h"
-#include "constants.hpp"
+#include "abstractobjectdetectionmodel.h"
+#include "constants/model.hpp"
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QFileInfo>
@@ -17,7 +17,7 @@
 #include <tensorflow/lite/model.h>
 #include <utility>
 
-class TFModel : public AbstractTFModel {
+class TFModel : public AbstractObjectDetectionModel {
 public:
   explicit TFModel(QString modelName);
 
@@ -27,7 +27,7 @@ public:
    * @return Status, class id, score. Class id and score can be equal -1, if
    * objects not detected or was problems in process.
    */
-  std::tuple<bool, int, float> forward(const QImage &image) noexcept override;
+  std::map<int, float> forward(const QImage &image) noexcept override;
 
   /**
  * Enables GPU for the TFModel.
@@ -36,7 +36,7 @@ public:
  */
   bool enableGPU() override;
 
-  ~TFModel();
+  ~TFModel() override;
 
 private:
   /**
@@ -54,7 +54,7 @@ private:
    * confidence score.
    * @throws None
    */
-  std::pair<int, float> processOutput() const noexcept;
+  std::map<int, float> processOutput() const noexcept;
 
   /**
    * Transforms the given image for using in Tensorflow model.
@@ -62,9 +62,8 @@ private:
    * @return The transformed image.
    * @throws None
    */
-  const QImage transform(const QImage &image) noexcept;
+  QImage transform(const QImage &image) const noexcept;
 
-private:
   std::unique_ptr<tflite::Interpreter> mInterpreter;
   std::unique_ptr<tflite::FlatBufferModel> mModel;
   tflite::ops::builtin::BuiltinOpResolver mResolver;

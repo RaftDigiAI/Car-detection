@@ -93,6 +93,7 @@ Window {
             id: icon
             source: handler.score > 0.5 ? "qrc:/res/check.svg" : "qrc:/res/discard.svg"
             height: parent.height / 2
+            smooth: True
             width: height
             anchors {
                 top: carQuestion.top
