@@ -1,10 +1,9 @@
 #pragma once
 
-#include "abstracttfmodel.h"
-#include "constants.hpp"
+#include "abstractobjectdetectionmodel.h"
+#include "constants/general.hpp"
 #include "definedmodels.hpp"
 #include "tfmodel.h"
-#include "tfmodelmetadata.h"
 #include <QElapsedTimer>
 #include <QImage>
 #include <QObject>
@@ -17,7 +16,7 @@ public:
 
 signals:
   void imageProcessed(const int &classRes, const double &scoreRes);
-  void proccesFailed();
+  void proccessFailed();
 
 public slots:
   /**
@@ -32,5 +31,5 @@ public slots:
   void createModel();
 
 private:
-  std::unique_ptr<AbstractTFModel> mModel;
+  std::unique_ptr<AbstractObjectDetectionModel> mModel;
 };
