@@ -23,7 +23,7 @@ class VideoHandler : public QObject {
 
 public:
   explicit VideoHandler(QObject *parent = nullptr);
-  ~VideoHandler();
+  ~VideoHandler() override;
 
   /**
    * Get pointer to current video sink.
@@ -52,7 +52,7 @@ public:
   /**
    * @return Score detected class
    */
-  float score() const;
+  double score() const;
 
 
 
@@ -83,6 +83,16 @@ private slots:
                     const double &classScore = 0);
 
 private:
+  QTimer mModelTimer;
+  QThread mThread;
+  std::unique_ptr<TFModelWorker> mModelWorker{nullptr};
+
+  bool mInferenceStatus{false};
+  int mClassId{-1};
+  double mScore{0};
+
+  QPointer<QVideoSink> mVideoSink{nullptr};
+
   /**
    * Set current inference status and emit signal if it was changed.
    * Signal: inferenceStatusChanged
@@ -102,16 +112,5 @@ private:
    * Signal: scoreChanged
    * @param newScore
    */
-  void setScore(float newScore);
-
-private:
-  QTimer mModelTimer;
-  std::unique_ptr<TFModelWorker> mModelWorker;
-  QThread mThread;
-
-  bool mInferenceStatus;
-  int mClassId;
-  float mScore;
-
-  QPointer<QVideoSink> mVideoSink;
+  void setScore(double newScore);
 };

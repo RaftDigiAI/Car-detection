@@ -1,6 +1,7 @@
 #pragma once
 
 #include "abstractobjectdetectionmodel.h"
+#include "constants/general.hpp"
 #include "constants/model.hpp"
 #include <QDebug>
 #include <QElapsedTimer>
@@ -36,6 +37,12 @@ public:
   bool enableGPU() noexcept override;
 
 private:
+  std::unique_ptr<tflite::Interpreter> mInterpreter;
+  std::unique_ptr<tflite::FlatBufferModel> mModel;
+  tflite::ops::builtin::BuiltinOpResolver mResolver;
+  TfLiteDelegate *mDelegate;
+  uchar *mInput;
+
   /**
    * Get output from model.
    * Directly is the same like mInterpreter->typed_output_tensor<T>(numOutput);
@@ -43,7 +50,7 @@ private:
    * @param numOutput Number output tensor
    * @return Pointer to selected output tensor
    */
-  template <typename T> const T *getOutput(const int &numOutput) const noexcept;
+  template <typename T> T *getOutput(const int &numOutput) const noexcept;
 
   /**
    * Retrieves the predictions from the model output.
@@ -61,15 +68,9 @@ private:
    * @throws None
    */
   QImage transform(const QImage &image) const noexcept;
-
-  std::unique_ptr<tflite::Interpreter> mInterpreter;
-  std::unique_ptr<tflite::FlatBufferModel> mModel;
-  tflite::ops::builtin::BuiltinOpResolver mResolver;
-  TfLiteDelegate *mDelegate;
-  uchar *mInput;
 };
 
 template <typename T>
-const T *TFModel::getOutput(const int &numOutput) const noexcept {
+T *TFModel::getOutput(const int &numOutput) const noexcept {
   return mInterpreter->typed_output_tensor<T>(numOutput);
 }

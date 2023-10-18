@@ -1,22 +1,21 @@
 #include "videohandler.h"
 
 VideoHandler::VideoHandler(QObject *parent)
-    : QObject{parent}, mVideoSink{nullptr}, mClassId{-1}, mScore{0},
-      mInferenceStatus{false} {
+    : QObject{parent} {
   mModelWorker = std::make_unique<TFModelWorker>();
   mModelWorker->moveToThread(&mThread);
   mModelTimer.setInterval(constants::general::inferenceDelayMs);
 
   // Connections
-  connect(&mModelTimer, &QTimer::timeout, this, [&]() {
+  connect(&mModelTimer, &QTimer::timeout, this, [this]() {
     QMetaObject::invokeMethod(
         mModelWorker.get(), "processImage", Qt::QueuedConnection,
         Q_ARG(QImage, mVideoSink->videoFrame().toImage()));
   });
   connect(mModelWorker.get(), &TFModelWorker::proccessFailed, this,
-          [&]() { updateStatus(); });
+          [this]() { updateStatus(); });
   connect(mModelWorker.get(), &TFModelWorker::imageProcessed, this,
-          [&](const int &classId, const double &score) {
+          [this](const int &classId, const double &score) {
             updateStatus(true, classId, score);
           });
   connect(&mThread, &QThread::started, mModelWorker.get(),
@@ -56,9 +55,9 @@ void VideoHandler::setInferenceStatus(bool newInferenceStatus) {
   emit inferenceStatusChanged();
 }
 
-float VideoHandler::score() const { return mScore; }
+double VideoHandler::score() const { return mScore; }
 
-void VideoHandler::setScore(float newScore) {
+void VideoHandler::setScore(double newScore) {
   if (qFuzzyCompare(mScore, newScore))
     return;
   mScore = newScore;

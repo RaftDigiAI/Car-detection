@@ -17,7 +17,7 @@ void TFModelWorker::processImage(const QImage &image) noexcept {
   }
 
   // Process results.
-  auto predictions = mModel->forward(image);
+  const auto &predictions = mModel->forward(image);
   // If predictions is empty, mean that `forward` not successful
   if (predictions.empty()) {
     qCritical()
@@ -25,9 +25,13 @@ void TFModelWorker::processImage(const QImage &image) noexcept {
     emit this->proccessFailed();
     return;
   }
+  // Get carClass score, if it not find then set it to 0.
+  const double score =
+      predictions.find(constants::model::carClass) != predictions.end()
+          ? predictions.at(constants::model::carClass)
+          : 0;
 
-  emit this->imageProcessed(constants::model::carClass,
-                            predictions[constants::model::carClass]);
+  emit this->imageProcessed(constants::model::carClass, score);
 }
 
 void TFModelWorker::createModel() {

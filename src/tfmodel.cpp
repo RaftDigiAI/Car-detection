@@ -1,4 +1,5 @@
 #include "tfmodel.h"
+#include "constants/general.hpp"
 
 TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   auto pathToModel =
@@ -8,12 +9,15 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   mModel = tflite::FlatBufferModel::BuildFromFile(pathToModel.c_str());
   // Build the interpreter
   tflite::InterpreterBuilder builder(*mModel, mResolver);
-  auto status = builder(&mInterpreter);
-  qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
-           << (status == kTfLiteOk);
   // If set to the value -1, the number of threads used
   // will be implementation-defined and platform-dependent.
   builder.SetNumThreads(-1);
+  auto status = builder(&mInterpreter);
+  qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
+           << (status == kTfLiteOk);
+
+  if constexpr(constants::general::useGpu)
+    enableGPU();
 
   // Allocate tensors if previously state is ok
   if (status == kTfLiteOk) {
@@ -96,7 +100,7 @@ std::map<int, float> TFModel::processOutput() const noexcept {
   // Iterate over the detected objects
   // In this model, countDetected cannot be more than 25.
   for (int i = 0; itUsable && (i < countDetected); i++) {
-    const auto &classId = static_cast<uchar>(detectedClasses[i]);
+    const auto &classId = static_cast<int>(std::floor(detectedClasses[i]));
     const auto &score = detectedScores[i];
     const bool itDetected{score >= constants::model::threshold};
 

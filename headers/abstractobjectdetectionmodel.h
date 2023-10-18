@@ -29,5 +29,5 @@ protected:
    * After close application file will be deleted.
    * @return path to model
    */
-  QString placeModel(const QString &modelName);
+  QString placeModel(const QString &modelName) const;
 };
