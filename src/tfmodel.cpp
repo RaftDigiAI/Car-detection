@@ -16,7 +16,7 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
            << (status == kTfLiteOk);
 
-  if constexpr(constants::general::useGpu)
+  if constexpr (constants::general::useGpu)
     enableGPU();
 
   // Allocate tensors if previously state is ok
@@ -32,7 +32,7 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
 
 TFModel::~TFModel() { TfLiteGpuDelegateV2Delete(mDelegate); }
 
-std::map<int, float> TFModel::forward(const QImage &image) noexcept {
+std::map<int, double> TFModel::forward(const QImage &image) noexcept {
   if (mInput == nullptr) {
     qWarning() << "TensorflowModel::forward(const QImage &image)."
                << "Model input equal nullptr.";
@@ -76,7 +76,7 @@ bool TFModel::enableGPU() noexcept {
   return true;
 }
 
-std::map<int, float> TFModel::processOutput() const noexcept {
+std::map<int, double> TFModel::processOutput() const noexcept {
   // Model output:
   // detection_boxes: Bounding box for each detection.
   // detection_classes: Object class for each detection.
@@ -95,13 +95,13 @@ std::map<int, float> TFModel::processOutput() const noexcept {
   itUsable &= detectedScores != nullptr;
 
   // Initialize the map to store the predictions
-  std::map<int, float> predictions;
+  std::map<int, double> predictions;
 
   // Iterate over the detected objects
   // In this model, countDetected cannot be more than 25.
   for (int i = 0; itUsable && (i < countDetected); i++) {
     const auto &classId = static_cast<int>(std::floor(detectedClasses[i]));
-    const auto &score = detectedScores[i];
+    const auto &score = static_cast<double>(detectedScores[i]);
     const bool itDetected{score >= constants::model::threshold};
 
     // If the object is detected with a high enough confidence score

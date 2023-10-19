@@ -16,10 +16,10 @@ class VideoHandler : public QObject {
 
   Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY
                  videoSinkChanged FINAL)
-  Q_PROPERTY(bool inferenceStatus READ inferenceStatus NOTIFY
-                 inferenceStatusChanged FINAL)
-  Q_PROPERTY(int classId READ classId NOTIFY classIdChanged FINAL)
   Q_PROPERTY(float score READ score NOTIFY scoreChanged FINAL)
+  Q_PROPERTY(bool carDetected READ carDetected NOTIFY carDetectedChanged FINAL)
+  Q_PROPERTY(bool objectsDetected READ getObjectsDetected NOTIFY
+                 objectsDetectedChanged FINAL)
 
 public:
   explicit VideoHandler(QObject *parent = nullptr);
@@ -38,32 +38,27 @@ public:
   void setVideoSink(QVideoSink *newVideoSink) noexcept;
 
   /**
-   * Return current status of inference
-   * @return Field `inferenceStatus`. Equal `true` if we don't have any problems
-   * with model and we can made inference. Otherwise `false`.
-   */
-  bool inferenceStatus() const;
-
-  /**
-   * @return Class id that was detected
-   */
-  int classId() const;
-
-  /**
    * @return Score detected class
    */
   double score() const;
 
+  /**
+   * @brief carDetected.
+   * @return `true` if detected car on frame, otherwise `false`.
+   */
+  bool carDetected() const;
 
+  bool getObjectsDetected() const;
+  void setObjectsDetected(bool newObjectsDetected);
 
 signals:
   void videoSinkChanged();
 
-  void inferenceStatusChanged();
-
-  void classIdChanged();
-
   void scoreChanged();
+
+  void carDetectedChanged();
+
+  void objectsDetectedChanged();
 
 private slots:
   /**
@@ -72,40 +67,22 @@ private slots:
   void processFrame();
 
   /**
- * Updates the status of the video handler.
- *
- * @param inferenceStatus the new inference status
- * @param detectedClass the detected class
- * @param classScore the score of the detected class
- */
-  void updateStatus(const bool &inferenceStatus = false,
-                    const int &detectedClass = -1,
-                    const double &classScore = 0);
+   * Updates the status of the video handler.
+   * @param predictions. Predictions from tf model. Key is detected class, value
+   * is score
+   */
+  void updateStatus(const std::map<int, double> &predictions);
 
 private:
   QTimer mModelTimer;
   QThread mThread;
   std::unique_ptr<TFModelWorker> mModelWorker{nullptr};
 
-  bool mInferenceStatus{false};
-  int mClassId{-1};
   double mScore{0};
+  bool mCarDetected;
+  bool mObjectsDetected{false};
 
   QPointer<QVideoSink> mVideoSink{nullptr};
-
-  /**
-   * Set current inference status and emit signal if it was changed.
-   * Signal: inferenceStatusChanged
-   * @param newInferenceStatus
-   */
-  void setInferenceStatus(bool newInferenceStatus);
-
-  /**
-   * Set detected class id and emit signal if it was changed.
-   * Signal: classIdChanged
-   * @param newClassId
-   */
-  void setClassId(int newClassId);
 
   /**
    * Set score detected class and emit signal if it was changed.
@@ -113,4 +90,10 @@ private:
    * @param newScore
    */
   void setScore(double newScore);
+
+  /**
+   * @brief setCarDetected
+   * @param newCarDetected. Set status detected car or not.
+   */
+  void setCarDetected(bool newCarDetected);
 };

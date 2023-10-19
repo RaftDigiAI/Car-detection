@@ -15,8 +15,7 @@ public:
   explicit TFModelWorker(QObject *parent = nullptr);
 
 signals:
-  void imageProcessed(const int &classRes, const double &scoreRes);
-  void proccessFailed();
+  void imageProcessed(const std::map<int, double> &predictions);
 
 public slots:
   /**

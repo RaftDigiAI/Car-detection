@@ -1,8 +1,7 @@
 <RCC>
     <qresource prefix="/res">
-        <file compress-algo="best" alias="default model">resource/lite-model_efficientdet_lite0_detection_default_1.tflite</file>
-        <file compress-algo="best" alias="discard.svg">resource/Icons/xmark-solid.svg</file>
-        <file compress-algo="best" alias="check.svg">resource/Icons/check-solid.svg</file>
-        <file compress-algo="best" alias="model int8">resource/lite-model_efficientdet_lite0_int8_1.tflite</file>
+        <file alias="default model" compress-algo="best">resource/lite-model_efficientdet_lite0_detection_default_1.tflite</file>
+        <file alias="model int8" compress-algo="best">resource/lite-model_efficientdet_lite0_int8_1.tflite</file>
+        <file>resource/fonts/icon_font.ttf</file>
     </qresource>
 </RCC>

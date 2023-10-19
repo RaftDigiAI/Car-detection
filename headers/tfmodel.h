@@ -28,7 +28,7 @@ public:
    * @param image The input image to be processed by the model.
    * @return A std::map<int, float> containing the model's output.
    */
-  std::map<int, float> forward(const QImage &image) noexcept override;
+  std::map<int, double> forward(const QImage &image) noexcept override;
 
   /**
    * Enables GPU for the TFModel.
@@ -59,7 +59,7 @@ private:
    * If on image detected few objects of the same class,
    * then only the max score from it will be returned
    */
-  std::map<int, float> processOutput() const noexcept;
+  std::map<int, double> processOutput() const noexcept;
 
   /**
    * Transforms the given image for using in Tensorflow model.

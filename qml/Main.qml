@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Window
 import QtMultimedia
 import QtQuick.Controls.Material
 import CarPrice
@@ -17,30 +15,6 @@ Window {
     Material.theme: Material.Light
 
     // Default camera state - is Active
-    MediaDevices {
-        id: mediaDevices
-    }
-
-    CaptureSession {
-        imageCapture: ImageCapture {
-            id: imageCapture
-        }
-
-        camera: Camera {
-            id: camera
-            cameraDevice: mediaDevices.defaultVideoInput
-            active: true
-            focusMode: Camera.FocusModeInfinity
-        }
-
-        videoOutput: preview
-    }
-
-    VideoHandler {
-        id: handler
-        videoSink: preview.videoSink
-    }
-
     Component.onCompleted: {
         preview.rotation = itLandscape ? 90 : 0
     }
@@ -62,44 +36,12 @@ Window {
         }
     }
 
-    Rectangle {
-        id: carItem
-        color: Material.background
-        height: carQuestion.height
-        width: carQuestion.width + icon.width * 1.5
+    CamerHandler {
+        id: handler
+        videoOutput: preview
+    }
 
-        radius: 20
-
-        anchors {
-            top: parent.top
-            left: parent.left
-        }
-
-        anchors.margins: 10
-
-        Text {
-            id: carQuestion
-            x: 5
-            width: 92
-            height: 20
-            text: "Car on frame?"
-            anchors {
-                top: parent.top
-                bottom: parent.botom
-            }
-        }
-
-        Image {
-            id: icon
-            source: handler.score > 0.5 ? "qrc:/res/check.svg" : "qrc:/res/discard.svg"
-            height: parent.height / 2
-            smooth: True
-            width: height
-            anchors {
-                top: carQuestion.top
-                left: carQuestion.right
-                bottom: carQuestion.bottom
-            }
-        }
+    StatusOverlay {
+        id: carStatusOverlay
     }
 }
