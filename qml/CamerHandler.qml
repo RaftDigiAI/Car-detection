@@ -7,7 +7,8 @@ Item {
     property alias videoOutput: captureSession.videoOutput
     property alias objectsDetected: handler.objectsDetected
     property alias scoreDetectedObject: handler.score
-    readonly property bool carDetected: handler.carDetected
+    property alias carDetected: handler.carDetected
+    property alias inferenceMs: handler.lastInferenceMs
 
     MediaDevices {
         id: mediaDevices

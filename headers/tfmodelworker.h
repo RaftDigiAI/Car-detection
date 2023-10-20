@@ -16,6 +16,7 @@ public:
 
 signals:
   void imageProcessed(const std::map<int, double> &predictions);
+  void executionTimeMeasured(qint64 time);
 
 public slots:
   /**
@@ -30,5 +31,6 @@ public slots:
   void createModel();
 
 private:
+  QElapsedTimer mTimer;
   std::unique_ptr<AbstractObjectDetectionModel> mModel;
 };

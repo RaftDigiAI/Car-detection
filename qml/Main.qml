@@ -43,5 +43,8 @@ Window {
 
     StatusOverlay {
         id: carStatusOverlay
+        inferenceTime: handler.inferenceMs
+        carDetected: handler.carDetected
+        objectsDetected: handler.objectsDetected
     }
 }

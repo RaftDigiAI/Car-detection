@@ -51,6 +51,7 @@ Rectangle {
             text: "\ue900"
             horizontalAlignment: Text.AlignHCenter
             color: carDetected ? "green" : "red"
+            Layout.fillWidth: true
         }
 
         Text {
@@ -62,8 +63,8 @@ Rectangle {
             id: objectsDetectedIcon
             text: "\ue903"
             horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
             color: objectsDetected ? "green" : "red"
+            Layout.fillWidth: true
         }
 
         Text {
@@ -74,6 +75,8 @@ Rectangle {
         Text {
             id: inferenceIcon
             text: inferenceTime + "\ue904"
+            horizontalAlignment: Text.AlignHCenter
+            Layout.fillWidth: true
         }
     }
 }

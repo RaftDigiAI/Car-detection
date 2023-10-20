@@ -16,8 +16,6 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
            << (status == kTfLiteOk);
 
-  if constexpr (constants::general::useGpu)
-    enableGPU();
 
   // Allocate tensors if previously state is ok
   if (status == kTfLiteOk) {
@@ -48,14 +46,8 @@ std::map<int, double> TFModel::forward(const QImage &image) noexcept {
   }
 
   std::memcpy(mInput, inputImage, constants::model::size);
-
-  QElapsedTimer timer;
-  timer.start();
-  const auto status = mInterpreter->Invoke();
-  qInfo() << "TensorflowModel::forward. Inference time:" << timer.elapsed()
-          << "ms.";
-
-  if (status == kTfLiteOk)
+  
+  if (const auto status = mInterpreter->Invoke(); status == kTfLiteOk)
     return processOutput();
 
   qWarning() << "TensorflowModel::forward. Cannot make forward;";

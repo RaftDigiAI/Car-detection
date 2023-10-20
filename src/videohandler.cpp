@@ -10,6 +10,8 @@ VideoHandler::VideoHandler(QObject *parent) : QObject{parent} {
           &VideoHandler::updateStatus);
   connect(&mThread, &QThread::started, mModelWorker.get(),
           &TFModelWorker::createModel);
+  connect(mModelWorker.get(), &TFModelWorker::executionTimeMeasured, this,
+          &VideoHandler::setLastInferenceMs);
   connect(&mModelTimer, &QTimer::timeout, this, [this]() {
     QMetaObject::invokeMethod(
         mModelWorker.get(), "processImage", Qt::QueuedConnection,
@@ -24,7 +26,11 @@ VideoHandler::~VideoHandler() {
   mThread.wait();
 }
 
-///////////////////////QML CONNECTIONS/////////////////////////////////////////
+/**
+ * @defgroup Qml functions.
+ * Qml functions for set, get class members.
+ * @{
+ */
 
 QVideoSink *VideoHandler::videoSink() const noexcept {
   return mVideoSink.get();
@@ -58,35 +64,27 @@ void VideoHandler::setCarDetected(bool newCarDetected) {
   emit carDetectedChanged();
 }
 
-bool VideoHandler::getObjectsDetected() const
-{
-  return mObjectsDetected;
+bool VideoHandler::objectsDetected() const { 
+  return mObjectsDetected; 
 }
 
-void VideoHandler::setObjectsDetected(bool newObjectsDetected)
-{
+void VideoHandler::setObjectsDetected(bool newObjectsDetected) {
   if (mObjectsDetected == newObjectsDetected)
     return;
   mObjectsDetected = newObjectsDetected;
   emit objectsDetectedChanged();
 }
 
-///////////////////////////END QML CONNECTIONS//////////////////////////////////
+qint64 VideoHandler::lastInferenceMs() const { return mLastInferenceMs; }
 
-void VideoHandler::processFrame() {
-  if (mVideoSink.isNull()) {
-    qCritical() << "VideoHandler::processFrame. Start process frame when video "
-                   "sink is null.";
+void VideoHandler::setLastInferenceMs(qint64 newLastInferenceMs) {
+  if (mLastInferenceMs == newLastInferenceMs)
     return;
-  }
-
-  const QVideoFrame frame{mVideoSink->videoFrame()};
-  QElapsedTimer timer;
-  timer.start();
-  mModelWorker->processImage(frame.toImage());
-  qInfo() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
-          << "ms.";
+  mLastInferenceMs = newLastInferenceMs;
+  emit lastInferenceMsChanged();
 }
+
+/** @} */
 
 void VideoHandler::updateStatus(const std::map<int, double> &predictions) {
   const int carClass{constants::model::carClass};
@@ -98,5 +96,3 @@ void VideoHandler::updateStatus(const std::map<int, double> &predictions) {
   setScore(score);
   setCarDetected(carDetected && score > 0.5);
 }
-
-
