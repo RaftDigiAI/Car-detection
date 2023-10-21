@@ -16,14 +16,21 @@ class VideoHandler : public QObject {
 
   Q_PROPERTY(QVideoSink *videoSink READ videoSink WRITE setVideoSink NOTIFY
                  videoSinkChanged FINAL)
-  Q_PROPERTY(bool inferenceStatus READ inferenceStatus NOTIFY
-                 inferenceStatusChanged FINAL)
-  Q_PROPERTY(int classId READ classId NOTIFY classIdChanged FINAL)
   Q_PROPERTY(float score READ score NOTIFY scoreChanged FINAL)
-
+  Q_PROPERTY(bool carDetected READ carDetected NOTIFY carDetectedChanged FINAL)
+  Q_PROPERTY(bool objectsDetected READ objectsDetected NOTIFY
+                 objectsDetectedChanged FINAL)
+  Q_PROPERTY(int lastInferenceMs READ lastInferenceMs NOTIFY
+                 lastInferenceMsChanged FINAL)
 public:
   explicit VideoHandler(QObject *parent = nullptr);
-  ~VideoHandler();
+  ~VideoHandler() override;
+
+  /**
+   * @defgroup Qml functions.
+   * Qml functions for set, get class members.
+   * @{
+   */
 
   /**
    * Get pointer to current video sink.
@@ -38,80 +45,83 @@ public:
   void setVideoSink(QVideoSink *newVideoSink) noexcept;
 
   /**
-   * Return current status of inference
-   * @return Field `inferenceStatus`. Equal `true` if we don't have any problems
-   * with model and we can made inference. Otherwise `false`.
-   */
-  bool inferenceStatus() const;
-
-  /**
-   * @return Class id that was detected
-   */
-  int classId() const;
-
-  /**
    * @return Score detected class
    */
-  float score() const;
+  double score() const;
 
+  /**
+   * @brief carDetected.
+   * @return `true` if detected car on frame, otherwise `false`.
+   */
+  bool carDetected() const;
 
+  /**
+   * @brief Get the Objects Detected object
+   * @return `true` if any objects detected, otherwise `false`
+   */
+  bool objectsDetected() const;
+
+  /**
+   * @brief Get the last inference time.
+   * @return qint64 last inference model time.
+   */
+  qint64 lastInferenceMs() const;
+
+  /** @} */
 
 signals:
   void videoSinkChanged();
 
-  void inferenceStatusChanged();
-
-  void classIdChanged();
-
   void scoreChanged();
 
-private slots:
-  /**
-   * Get current frame and push it to the model.
-   */
-  void processFrame();
+  void carDetectedChanged();
 
-  /**
- * Updates the status of the video handler.
- *
- * @param inferenceStatus the new inference status
- * @param detectedClass the detected class
- * @param classScore the score of the detected class
- */
-  void updateStatus(const bool &inferenceStatus = false,
-                    const int &detectedClass = -1,
-                    const double &classScore = 0);
+  void objectsDetectedChanged();
+
+  void lastInferenceMsChanged();
+
+private slots:
+   /**
+   * Updates the status of the video handler.
+   * @param predictions. Predictions from tf model. Key is detected class, value
+   * is score
+   */
+  void updateStatus(const std::map<int, double> &predictions);
 
 private:
-  /**
-   * Set current inference status and emit signal if it was changed.
-   * Signal: inferenceStatusChanged
-   * @param newInferenceStatus
-   */
-  void setInferenceStatus(bool newInferenceStatus);
+  QTimer mModelTimer;
+  QThread mThread;
+  std::unique_ptr<TFModelWorker> mModelWorker{nullptr};
 
-  /**
-   * Set detected class id and emit signal if it was changed.
-   * Signal: classIdChanged
-   * @param newClassId
-   */
-  void setClassId(int newClassId);
+  qint64 mLastInferenceMs{0};
+  double mScore{0};
+  bool mCarDetected;
+  bool mObjectsDetected{false};
+
+  QPointer<QVideoSink> mVideoSink{nullptr};
 
   /**
    * Set score detected class and emit signal if it was changed.
    * Signal: scoreChanged
    * @param newScore
    */
-  void setScore(float newScore);
+  void setScore(double newScore);
 
-private:
-  QTimer mModelTimer;
-  std::unique_ptr<TFModelWorker> mModelWorker;
-  QThread mThread;
+  /**
+   * @brief setCarDetected
+   * @param newCarDetected. Set status detected car or not.
+   */
+  void setCarDetected(bool newCarDetected);
 
-  bool mInferenceStatus;
-  int mClassId;
-  float mScore;
+  /**
+   * @brief Set the Last Inference Ms object
+   * @param newLastInferenceMs new last inference model time.
+   */
+  void setLastInferenceMs(qint64 newLastInferenceMs);
 
-  QPointer<QVideoSink> mVideoSink;
+  /**
+   * @brief Set the Objects Detected object
+   * @param newObjectsDetected new status detected objects. 
+   */
+  void setObjectsDetected(bool newObjectsDetected);
 };

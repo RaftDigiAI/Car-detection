@@ -36,7 +36,7 @@ qt_add_executable(appCarPrice
 qt_add_qml_module(appCarPrice
     URI CarPrice
     VERSION 1.0
-    QML_FILES qml/Main.qml
+    QML_FILES qml/Main.qml qml/StatusOverlay.qml qml/CamerHandler.qml
     RESOURCES resource.qrc
     SOURCES headers/videohandler.h src/videohandler.cpp
 )

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "abstractobjectdetectionmodel.h"
+#include "constants/general.hpp"
 #include "constants/model.hpp"
 #include <QDebug>
 #include <QElapsedTimer>
@@ -27,7 +28,7 @@ public:
    * @param image The input image to be processed by the model.
    * @return A std::map<int, float> containing the model's output.
    */
-  std::map<int, float> forward(const QImage &image) noexcept override;
+  std::map<int, double> forward(const QImage &image) noexcept override;
 
   /**
    * Enables GPU for the TFModel.
@@ -36,6 +37,12 @@ public:
   bool enableGPU() noexcept override;
 
 private:
+  std::unique_ptr<tflite::Interpreter> mInterpreter;
+  std::unique_ptr<tflite::FlatBufferModel> mModel;
+  tflite::ops::builtin::BuiltinOpResolver mResolver;
+  TfLiteDelegate *mDelegate;
+  uchar *mInput;
+
   /**
    * Get output from model.
    * Directly is the same like mInterpreter->typed_output_tensor<T>(numOutput);
@@ -43,7 +50,7 @@ private:
    * @param numOutput Number output tensor
    * @return Pointer to selected output tensor
    */
-  template <typename T> const T *getOutput(const int &numOutput) const noexcept;
+  template <typename T> T *getOutput(const int &numOutput) const noexcept;
 
   /**
    * Retrieves the predictions from the model output.
@@ -52,7 +59,7 @@ private:
    * If on image detected few objects of the same class,
    * then only the max score from it will be returned
    */
-  std::map<int, float> processOutput() const noexcept;
+  std::map<int, double> processOutput() const noexcept;
 
   /**
    * Transforms the given image for using in Tensorflow model.
@@ -61,15 +68,9 @@ private:
    * @throws None
    */
   QImage transform(const QImage &image) const noexcept;
-
-  std::unique_ptr<tflite::Interpreter> mInterpreter;
-  std::unique_ptr<tflite::FlatBufferModel> mModel;
-  tflite::ops::builtin::BuiltinOpResolver mResolver;
-  TfLiteDelegate *mDelegate;
-  uchar *mInput;
 };
 
 template <typename T>
-const T *TFModel::getOutput(const int &numOutput) const noexcept {
+T *TFModel::getOutput(const int &numOutput) const noexcept {
   return mInterpreter->typed_output_tensor<T>(numOutput);
 }

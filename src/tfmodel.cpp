@@ -1,4 +1,5 @@
 #include "tfmodel.h"
+#include "constants/general.hpp"
 
 TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   auto pathToModel =
@@ -8,12 +9,13 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   mModel = tflite::FlatBufferModel::BuildFromFile(pathToModel.c_str());
   // Build the interpreter
   tflite::InterpreterBuilder builder(*mModel, mResolver);
-  auto status = builder(&mInterpreter);
-  qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
-           << (status == kTfLiteOk);
   // If set to the value -1, the number of threads used
   // will be implementation-defined and platform-dependent.
   builder.SetNumThreads(-1);
+  auto status = builder(&mInterpreter);
+  qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
+           << (status == kTfLiteOk);
+
 
   // Allocate tensors if previously state is ok
   if (status == kTfLiteOk) {
@@ -28,7 +30,7 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
 
 TFModel::~TFModel() { TfLiteGpuDelegateV2Delete(mDelegate); }
 
-std::map<int, float> TFModel::forward(const QImage &image) noexcept {
+std::map<int, double> TFModel::forward(const QImage &image) noexcept {
   if (mInput == nullptr) {
     qWarning() << "TensorflowModel::forward(const QImage &image)."
                << "Model input equal nullptr.";
@@ -44,14 +46,8 @@ std::map<int, float> TFModel::forward(const QImage &image) noexcept {
   }
 
   std::memcpy(mInput, inputImage, constants::model::size);
-
-  QElapsedTimer timer;
-  timer.start();
-  const auto status = mInterpreter->Invoke();
-  qInfo() << "TensorflowModel::forward. Inference time:" << timer.elapsed()
-          << "ms.";
-
-  if (status == kTfLiteOk)
+  
+  if (const auto status = mInterpreter->Invoke(); status == kTfLiteOk)
     return processOutput();
 
   qWarning() << "TensorflowModel::forward. Cannot make forward;";
@@ -72,7 +68,7 @@ bool TFModel::enableGPU() noexcept {
   return true;
 }
 
-std::map<int, float> TFModel::processOutput() const noexcept {
+std::map<int, double> TFModel::processOutput() const noexcept {
   // Model output:
   // detection_boxes: Bounding box for each detection.
   // detection_classes: Object class for each detection.
@@ -91,13 +87,13 @@ std::map<int, float> TFModel::processOutput() const noexcept {
   itUsable &= detectedScores != nullptr;
 
   // Initialize the map to store the predictions
-  std::map<int, float> predictions;
+  std::map<int, double> predictions;
 
   // Iterate over the detected objects
   // In this model, countDetected cannot be more than 25.
   for (int i = 0; itUsable && (i < countDetected); i++) {
-    const auto &classId = static_cast<uchar>(detectedClasses[i]);
-    const auto &score = detectedScores[i];
+    const auto &classId = static_cast<int>(std::floor(detectedClasses[i]));
+    const auto &score = static_cast<double>(detectedScores[i]);
     const bool itDetected{score >= constants::model::threshold};
 
     // If the object is detected with a high enough confidence score

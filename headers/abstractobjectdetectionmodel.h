@@ -14,7 +14,7 @@ public:
    * @return Status, class id, score. Class id and score can be equal -1, if
    * objects not detected or was problems in process.
    */
-  virtual std::map<int, float> forward(const QImage &image) = 0;
+  virtual std::map<int, double> forward(const QImage &image) = 0;
 
   /**
    * Enables GPU for the TensorflowModel.
@@ -29,5 +29,5 @@ protected:
    * After close application file will be deleted.
    * @return path to model
    */
-  QString placeModel(const QString &modelName);
+  QString placeModel(const QString &modelName) const;
 };

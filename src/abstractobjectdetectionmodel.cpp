@@ -1,6 +1,7 @@
 #include "abstractobjectdetectionmodel.h"
 
-QString AbstractObjectDetectionModel::placeModel(const QString &modelName) {
+QString
+AbstractObjectDetectionModel::placeModel(const QString &modelName) const {
   if (QFile::exists(modelName))
     return modelName;
 
@@ -8,9 +9,8 @@ QString AbstractObjectDetectionModel::placeModel(const QString &modelName) {
   modelPath += modelName;
 
   QFile modelFile(modelPath);
-  bool successfully = modelFile.copy(modelName);
 
-  if (!successfully) {
+  if (bool successfully = modelFile.copy(modelName); !successfully) {
     qCritical() << "TensorflowModel::placeModel. Model not exist.";
     return {};
   }
