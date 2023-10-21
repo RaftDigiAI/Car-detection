@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(CarPrice VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 6.3 REQUIRED COMPONENTS Quick Multimedia Svg)
@@ -19,18 +20,17 @@ include_directories(src/
     third-party/tflite-support/
     third-party/abseil-cpp
     third-party/protobuf/src
-    protobuf/
-    flatbuffer/
 )
 
 qt_add_executable(appCarPrice
     src/main.cpp
-    headers/constants.hpp
+    headers/definedmodels.hpp
     resource.qrc
 
     headers/tfmodel.h src/tfmodel.cpp
-    headers/tfmodelmetadata.h src/tfmodelmetadata.cpp
-    headers/abstracttfmodel.h src/abstracttfmodel.cpp
+    headers/abstractobjectdetectionmodel.h src/abstractobjectdetectionmodel.cpp
+    headers/tfmodelworker.h src/tfmodelworker.cpp
+    headers/constants/general.hpp headers/constants/model.hpp
 )
 
 qt_add_qml_module(appCarPrice
@@ -58,7 +58,6 @@ set_target_properties(appCarPrice PROPERTIES
 
 add_library(tensorflowlite SHARED IMPORTED)
 add_library(tensorflowlite_gpu_delegate SHARED IMPORTED)
-add_library(object_detector STATIC IMPORTED)
 
 if (ANDROID)
     if (${ANDROID_ABI} STREQUAL "x86_64")
@@ -69,8 +68,6 @@ if (ANDROID)
         # Setup tensorflowlite deleagte property
         set_property(TARGET tensorflowlite_gpu_delegate PROPERTY
             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/x86_64/libtensorflowlite_gpu_delegate.so)
-        set_property(TARGET object_detector PROPERTY
-            IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/x86_64/libobject_detector.a)
 
         # Copy files
         file(GLOB libraries
@@ -85,9 +82,8 @@ if (ANDROID)
         # Set tensorflowlite deleagte property
         set_property(TARGET tensorflowlite_gpu_delegate PROPERTY
             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/arm64/libtensorflowlite_gpu_delegate.so)
-        set_property(TARGET object_detector PROPERTY
-            IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/arm64/libobject_detector.a)
 
+        # Copy files
         file(GLOB libraries
             "${CMAKE_SOURCE_DIR}/lib/tensorflow-lite/arm64/*")
         file(COPY ${libraries}
@@ -107,7 +103,6 @@ target_link_libraries(appCarPrice
     Qt6::Svg
     tensorflowlite
     tensorflowlite_gpu_delegate
-    object_detector
 )
 
 include(GNUInstallDirs)

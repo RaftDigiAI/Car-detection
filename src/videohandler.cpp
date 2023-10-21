@@ -3,8 +3,32 @@
 VideoHandler::VideoHandler(QObject *parent)
     : QObject{parent}, mVideoSink{nullptr}, mClassId{-1}, mScore{0},
       mInferenceStatus{false} {
-  mModelTimer.setInterval(Constants::General::inferenceDelayMs);
-  connect(&mModelTimer, &QTimer::timeout, this, &VideoHandler::processFrame);
+  mModelWorker = std::make_unique<TFModelWorker>();
+  mModelWorker->moveToThread(&mThread);
+  mModelTimer.setInterval(constants::general::inferenceDelayMs);
+
+  // Connections
+  connect(&mModelTimer, &QTimer::timeout, this, [&]() {
+    QMetaObject::invokeMethod(
+        mModelWorker.get(), "processImage", Qt::QueuedConnection,
+        Q_ARG(QImage, mVideoSink->videoFrame().toImage()));
+  });
+  connect(mModelWorker.get(), &TFModelWorker::proccessFailed, this,
+          [&]() { updateStatus(); });
+  connect(mModelWorker.get(), &TFModelWorker::imageProcessed, this,
+          [&](const int &classId, const double &score) {
+            updateStatus(true, classId, score);
+          });
+  connect(&mThread, &QThread::started, mModelWorker.get(),
+          &TFModelWorker::createModel);
+
+
+  mThread.start();
+}
+
+VideoHandler::~VideoHandler() {
+  mThread.quit();
+  mThread.wait();
 }
 
 ///////////////////////QML CONNECTIONS/////////////////////////////////////////
@@ -59,24 +83,18 @@ void VideoHandler::processFrame() {
     return;
   }
 
-  const QVideoFrame frame = mVideoSink->videoFrame();
-
+  const QVideoFrame frame{mVideoSink->videoFrame()};
   QElapsedTimer timer;
   timer.start();
-  processImage(frame.toImage());
+  mModelWorker->processImage(frame.toImage());
   qInfo() << "VideoHandler::processFrame. Process time:" << timer.elapsed()
           << "ms.";
 }
 
-void VideoHandler::processImage(const QImage &image) noexcept {
-  if (image.isNull()) {
-    qDebug() << "VideoHandler::processImage. Image not valid.";
-    return;
-  }
-
-  // Process results.
-  const auto &[status, classId, score] = mModel.forward(image);
-  setClassId(classId);
-  setScore(score);
-  setInferenceStatus(status);
+void VideoHandler::updateStatus(const bool &inferenceStatus,
+                                const int &detectedClass,
+                                const double &classScore) {
+  setInferenceStatus(inferenceStatus);
+  setScore(classScore);
+  setClassId(detectedClass);
 }
