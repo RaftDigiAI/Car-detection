@@ -1,5 +1,4 @@
 #include "tfmodel.h"
-#include "constants/general.hpp"
 
 TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   auto pathToModel =
@@ -15,7 +14,6 @@ TFModel::TFModel(QString modelName) : AbstractObjectDetectionModel() {
   auto status = builder(&mInterpreter);
   qDebug() << "TensorflowModel::TensorflowModel. Builder status ok?:"
            << (status == kTfLiteOk);
-
 
   // Allocate tensors if previously state is ok
   if (status == kTfLiteOk) {
@@ -111,6 +109,9 @@ std::map<int, double> TFModel::processOutput() const noexcept {
 QImage TFModel::transform(const QImage &image) const noexcept {
   QImage inputImage{image.scaled(constants::model::inputWidth,
                                  constants::model::inputHeight)};
+  // For these model imgFormat equal `QImage::Format_RGB888`.
+  // Important set the correct image format, otherwise ower predictons will
+  // be wrong.
   inputImage.convertTo(constants::model::imgFormat);
   return inputImage;
 }

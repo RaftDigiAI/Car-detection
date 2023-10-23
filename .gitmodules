@@ -4,12 +4,3 @@
 [submodule "third-party/flatbuffers"]
 	path = third-party/flatbuffers
 	url = https://github.com/google/flatbuffers.git
-[submodule "third-party/abseil-cpp"]
-	path = third-party/abseil-cpp
-	url = https://github.com/abseil/abseil-cpp.git
-[submodule "third-party/tflite-support"]
-	path = third-party/tflite-support
-	url = https://github.com/tensorflow/tflite-support.git
-[submodule "third-party/protobuf"]
-	path = third-party/protobuf
-	url = https://github.com/protocolbuffers/protobuf.git

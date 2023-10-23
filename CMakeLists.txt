@@ -12,14 +12,10 @@ qt_standard_project_setup()
 
 add_compile_definitions(QT_NO_DEBUG_OUTPUT)
 
-include_directories(src/
-    qml/
+include_directories(
     headers/
     third-party/tensorflow
     third-party/flatbuffers/include
-    third-party/tflite-support/
-    third-party/abseil-cpp
-    third-party/protobuf/src
 )
 
 qt_add_executable(appCarPrice
