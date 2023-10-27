@@ -1,0 +1,23 @@
+= Car-detection
+
+== Description
+Car-detection is a project aimed at vehicle detection on mobile phone, developed in C++ using Qt Quick and Tensorflow Lite. This application allows you to detect the presence of cars in images.
+
+== Dependencies
+To build and run the project, you'll need the following dependencies:
+
+- Android NDK 25.2.9519653
+- Android SDK
+- Androiddeployqt
+- CMake
+- Qt Creator with Qt 6.4.3
+- Tensorflow Lite library. You can build it uself or used lib in project
+
+== Usage Examples
+In this section, you can provide code examples or usage instructions for the functionality of your application. For example:
+
+== License
+This project is distributed under the Apache-2.0 license. Details can be found in the LICENSE file.
+
+== Article
+Link to article: https://medium.com/@artem_durynin/car-detection-on-mobile-in-2023-what-challenges-did-we-face-and-how-did-we-solve-them-c8ebda41242d[link]
