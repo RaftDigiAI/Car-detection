@@ -20,4 +20,4 @@ In this section, you can provide code examples or usage instructions for the fun
 This project is distributed under the Apache-2.0 license. Details can be found in the LICENSE file.
 
 == Article
-Link to article: https://medium.com/@artem_durynin/car-detection-on-mobile-in-2023-what-challenges-did-we-face-and-how-did-we-solve-them-c8ebda41242d[link]
+Link to article: https://habr.com/ru/companies/raft/articles/770302/[link]
